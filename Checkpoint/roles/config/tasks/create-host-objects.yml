@@ -6,4 +6,4 @@
     color: "{{ host_color }}"
     state: present
     auto_publish_session: true
-    session_file: "{{ session_file }}"
+    session_file: "{{ temp_session_file }}"
