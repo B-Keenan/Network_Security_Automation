@@ -4,6 +4,12 @@
     that:
       - ansible_host is defined
 
+- name: Create temporary session file
+  ansible.builtin.tempfile:
+    state: file
+    suffix: ".json"
+  register: temp_session_file
+
 - name: Login to Check Point API
   ansible.builtin.uri:
     url: "https://{{ ansible_host }}/web_api/login"
@@ -18,12 +24,14 @@
   register: login_response
   no_log: true
 
-- name: Create session file
+# Write session data to temporary file
+- name: Populate temporary session file
   ansible.builtin.copy:
     content: |
       {
         "sid": "{{ login_response.json.sid }}",
+        "url": "https://{{ ansible_host }}/web_api",
         "server": "{{ ansible_host }}"
       }
-    dest: "{{ session_file }}"
+    dest: "{{ temp_session_file.path }}"
   when: login_response.status == 200

@@ -9,3 +9,10 @@
     validate_certs: no
   when: login_response.status == 200
   ignore_errors: yes
+
+# Clean up temporary file
+- name: Remove temporary session file
+  ansible.builtin.file:
+    path: "{{ temp_session_file.path }}"
+    state: absent
+  when: temp_session_file.path is defined
