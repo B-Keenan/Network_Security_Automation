@@ -8,6 +8,7 @@
   ansible.builtin.command: "ls roles/config/tasks/."
   changed_when: false
   register: dir_out
+  delegate_to: localhost
 
 - name: Include tasks when in task_selection
   when:
