@@ -6,4 +6,5 @@ collections:
   - name: ansible.netcommon
   - name: fortinet.fortios
   - name: check_point.mgmt
+  - name: check_point.gaia
   - name: awx.awx
