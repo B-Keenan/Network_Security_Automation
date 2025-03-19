@@ -19,7 +19,7 @@
   gather_facts: false
 
   roles:
-    - role: pre_tasks
+    - role: gather_facts
       tags:
         - always
     - role: config
