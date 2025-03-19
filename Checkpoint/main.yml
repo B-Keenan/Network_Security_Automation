@@ -31,7 +31,7 @@
 
   vars:
     ansible_connection: httpapi
-    ansible_network_os: check_point
+    ansible_network_os: checkpoint
     ansible_httpapi_use_ssl: true
     ansible_httpapi_validate_certs: false
 
