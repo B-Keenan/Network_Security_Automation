@@ -9,3 +9,4 @@
     validate_certs: no
   when: login_response.status == 200
   ignore_errors: yes
+  delegate_to: localhost

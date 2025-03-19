@@ -17,6 +17,7 @@
     validate_certs: no
   register: login_response
   no_log: true
+  delegate_to: localhost
 
 - name: Create session file
   ansible.builtin.copy:
@@ -27,3 +28,4 @@
       }
     dest: "{{ session_file }}"
   when: login_response.status == 200
+  delegate_to: localhost
