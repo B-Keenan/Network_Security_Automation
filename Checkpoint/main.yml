@@ -33,12 +33,9 @@
     ansible_connection: local
     ansible_httpapi_use_ssl: true
     ansible_httpapi_validate_certs: false
-    
-    # api key, will be moved to a secure location... eventually.
+
+    # api key, will be moved to AWX Credentials.
     api_key: ywc05hdP1bmszPUSOFkY8g==
 
-    # Parse parameters as JSON, default to empty dict if undefined or invalid
-    params: "{{ (parameters | default('{}') | from_json) | default({}) }}"
-    # Extract specific fields with defaults
-    host_name: "{{ params.host_name | default('default_host') }}"
-    host_ip: "{{ params.host_ip | default('') }}"
+    # Temp solution to parse parameters set by AWX Survey
+    parameters: "{{ (parameters | default('{}') | from_json) | default({}) }}"
