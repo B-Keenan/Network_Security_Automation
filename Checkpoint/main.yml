@@ -30,7 +30,7 @@
         - always
 
   vars:
-    ansible_connection: httpapi
+    ansible_connection: local
     ansible_httpapi_use_ssl: true
     ansible_httpapi_validate_certs: false
     api_key: ywc05hdP1bmszPUSOFkY8g==
