@@ -1,0 +1,10 @@
+---
+- name: Add host object
+  check_point.mgmt.cp_mgmt_host:
+    name: "{{ host_name.name }}"
+    ip_address: "{{ host_ip_address.ip_address }}"
+    color: "{{ host_color.color }}"
+    state: present
+    auto_publish_session: true
+    session_file: "{{ session_file }}"
+  when: host_params.name is defined

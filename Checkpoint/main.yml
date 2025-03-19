@@ -36,6 +36,3 @@
 
     # api key, will be moved to AWX Credentials.
     api_key: ywc05hdP1bmszPUSOFkY8g==
-
-    # Temp solution to parse parameters set by AWX Survey
-    parameters: "{{ (parameters | default('{}') | from_json) | default({}) }}"

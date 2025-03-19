@@ -1,0 +1,6 @@
+---
+vars:
+  host_params:
+    name: "{{ host_name | default(omit) }}"
+    ip_address: "{{ host_ip_address | default(omit) }}"
+    color: "{{ host_color | default(omit) }}"
