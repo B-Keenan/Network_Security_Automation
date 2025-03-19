@@ -1,0 +1,17 @@
+---
+- name: Add host object
+  check_point.mgmt.cp_mgmt_host:
+    name: "{{ host_name }}"
+    ip_address: "{{ host_ip }}"
+    state: present
+    auto_publish_session: true
+    session_file: "{{ session_file }}"
+  when: action == "add"
+
+- name: Delete host object
+  check_point.mgmt.cp_mgmt_host:
+    name: "{{ host_name }}"
+    state: absent
+    auto_publish_session: true
+    session_file: "{{ session_file }}"
+  when: action == "delete"

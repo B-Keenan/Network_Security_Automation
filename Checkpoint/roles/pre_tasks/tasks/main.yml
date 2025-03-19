@@ -1,0 +1,29 @@
+---
+- name: Check all variables
+  ansible.builtin.assert:
+    that:
+      - ansible_host is defined
+
+- name: Login to Check Point API
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}/web_api/login"
+    method: POST
+    headers:
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      api-key: "{{ api_key }}"
+    return_content: yes
+    validate_certs: no
+  register: login_response
+  no_log: true
+
+- name: Create session file
+  ansible.builtin.copy:
+    content: |
+      {
+        "sid": "{{ login_response.json.sid }}",
+        "server": "{{ ansible_host }}"
+      }
+    dest: "{{ session_file }}"
+  when: login_response.status == 200

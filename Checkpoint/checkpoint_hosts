@@ -1,0 +1,6 @@
+[checkpoint_mgmt]
+cp-manager ansible_host=10.255.32.55 ansible_user=admin ansible_ssh_pass='AWX@testing'
+
+[checkpoint_firewall]
+cp-fw01 ansible_host=10.255.32.56 ansible_user=admin ansible_ssh_pass='AWX@testing'
+cp-fw02 ansible_host=10.255.32.57 ansible_user=admin ansible_ssh_pass='AWX@testing'

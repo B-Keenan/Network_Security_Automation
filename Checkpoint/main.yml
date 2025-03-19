@@ -1,0 +1,37 @@
+---
+- name: Checkpoint Main Playbook
+  hosts: >
+    {% if awx_single_hosts_run is defined and awx_single_hosts_run | length > 0 %}
+      {{ awx_single_hosts_run }}
+    {% elif awx_hosts_vendor_selection is defined %}
+      {% if 'checkpoint_firewall' in awx_hosts_vendor_selection %}
+        {{ hosts | default('') + 'checkpoint_firewall,' }}
+      {% endif %}
+      {% if 'checkpoint_mgmt' in awx_hosts_vendor_selection %}
+        {{ hosts | default('') + 'checkpoint_mgmt,' }}
+      {% endif %}
+      {% if ('checkpoint_firewall' not in awx_hosts_vendor_selection) and ('checkpoint_mgmt' not in awx_hosts_vendor_selection) %}
+        none
+      {% endif %}
+    {% else %}
+      localhost
+    {% endif %}
+  gather_facts: false
+
+  roles:
+    - role: pre_tasks
+      tags:
+        - always
+    - role: config
+      tags:
+        - config
+    - role: post_tasks
+      tags:
+        - always
+
+  vars:
+    ansible_connection: httpapi
+    ansible_network_os: check_point.gaia.checkpoint
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+    api_key: ywc05hdP1bmszPUSOFkY8g==

@@ -1,0 +1,11 @@
+---
+- name: Logout from Check Point API
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}/web_api/logout"
+    method: POST
+    headers:
+      Content-Type: "application/json"
+      X-chkp-sid: "{{ login_response.json.sid }}"
+    validate_certs: no
+  when: login_response.status == 200
+  ignore_errors: yes

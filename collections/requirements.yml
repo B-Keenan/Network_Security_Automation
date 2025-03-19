@@ -1,0 +1,9 @@
+---
+collections:
+  - name: f5networks.f5_modules
+  - name: community.general
+  - name: ansible.utils
+  - name: ansible.netcommon
+  - name: fortinet.fortios
+  - name: check_point.mgmt
+  - name: awx.awx
