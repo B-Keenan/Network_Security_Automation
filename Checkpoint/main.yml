@@ -36,4 +36,6 @@
     ansible_httpapi_validate_certs: false
 
     # api key, will be moved to AWX Credentials.
-    api_key: ywc05hdP1bmszPUSOFkY8g==
+    ansible_httpapi_extra_args:
+      headers:
+        X-chkp-sid: "ywc05hdP1bmszPUSOFkY8g=="
