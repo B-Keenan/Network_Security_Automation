@@ -30,4 +30,4 @@
     ansible_httpapi_validate_certs: false
 
     # api key, will be moved to AWX Credentials.
-    ansible_api_key: 'ywc05hdP1bmszPUSOFkY8g=='
+    api_key: 'ywc05hdP1bmszPUSOFkY8g=='
