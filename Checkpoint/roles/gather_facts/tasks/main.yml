@@ -9,10 +9,12 @@
     - name: Set provider
       ansible.builtin.set_fact:
         provider:
-          ansible_password: "{{ ansible_ssh_pass }}"
           ansible_server: "{{ ansible_host }}"
           ansible_user: "{{ ansible_user }}"
+          ansible_password: "{{ ansible_ssh_pass }}"
+          ansible_httpapi_port: "{{ device_https_port }}"
       delegate_to: localhost
+      no_log: true
 
     - name: Get Checkpoint Gaia facts
       check_point.gaia.cp_gaia_version_facts:
