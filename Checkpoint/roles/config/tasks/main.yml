@@ -4,6 +4,25 @@
     that:
       - task_selection is defined
 
+##
+- name: Debug connection
+  ansible.builtin.debug:
+    var: ansible_connection
+  connection: local
+  delegate_to: localhost
+
+- name: Check directory
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/roles/config/tasks"
+  connection: local
+  delegate_to: localhost
+  register: dir_stat
+
+- name: Debug directory
+  ansible.builtin.debug:
+    var: dir_stat.stat.exists
+##
+
 - name: List tasks
   ansible.builtin.command: "ls roles/config/tasks/."
   connection: local
