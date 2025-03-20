@@ -1,11 +1,7 @@
 [checkpoint_mgmt]
 cp-manager ansible_host=10.255.32.55 ansible_user=admin ansible_ssh_pass='AWX@testing'
 
-[checkpoint_mgmt:vars]
-device_https_port=443
-
 [checkpoint_firewall]
 cp-fw01 ansible_host=10.255.32.56 ansible_user=admin ansible_ssh_pass='AWX@testing'
 cp-fw02 ansible_host=10.255.32.57 ansible_user=admin ansible_ssh_pass='AWX@testing'
-
 cp-fw03 ansible_host=10.255.32.58 ansible_user=admin ansible_ssh_pass='AWX@testing'

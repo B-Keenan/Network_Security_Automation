@@ -6,7 +6,7 @@
 
 - name: List tasks
   ansible.builtin.command: "ls roles/config/tasks/."
-  # Testing connection override as a temp workaround - defaulting to httpapi
+  # Testing connection override as a temp workaround as it's defaulting to httpapi
   vars:
     ansible_connection: local
   changed_when: false
