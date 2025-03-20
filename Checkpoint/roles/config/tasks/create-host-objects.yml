@@ -1,18 +1,4 @@
 ---
-## - debugs
-- name: Debug connection vars
-  ansible.builtin.debug:
-    msg:
-      - "Host: {{ inventory_hostname }}"
-      - "Connection: {{ ansible_connection }}"
-      - "API Key: {{ ansible_api_key }}"
-      - "Network OS: {{ ansible_network_os }}"
-
-- name: Debug login result
-  ansible.builtin.debug:
-    var: login_result
-##
-
 - name: Add host object
   check_point.mgmt.cp_mgmt_host:
     name: "{{ host_name }}"
@@ -20,3 +6,4 @@
     color: "{{ host_color }}"
     state: present
     auto_publish_session: true
+  delegate_to: cp-manager
