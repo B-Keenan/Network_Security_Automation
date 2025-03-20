@@ -8,4 +8,4 @@ device_https_port=443
 cp-fw01 ansible_host=10.255.32.56 ansible_user=admin ansible_ssh_pass='AWX@testing'
 cp-fw02 ansible_host=10.255.32.57 ansible_user=admin ansible_ssh_pass='AWX@testing'
 
-test git override - I believe we need to pull/fetch regularly to ensure we have the latest changes...
+cp-fw03 ansible_host=10.255.32.58 ansible_user=admin ansible_ssh_pass='AWX@testing'
