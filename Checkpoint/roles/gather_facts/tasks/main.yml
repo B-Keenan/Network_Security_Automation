@@ -6,17 +6,26 @@
 
 - name: Gather device facts
   block:
-    - name: Set provider
-      ansible.builtin.set_fact:
-        provider:
-          ansible_server: "{{ ansible_host }}"
-          ansible_user: "{{ ansible_user }}"
-          ansible_password: "{{ ansible_ssh_pass }}"
-          ansible_httpapi_port: "{{ device_https_port }}"
-      delegate_to: localhost
-      no_log: true
+    - name: Login to Check Point Gaia API
+      ansible.builtin.uri:
+        url: "https://{{ ansible_host }}/api/v1/login"
+        method: POST
+        body_format: json
+        body:
+          api-key: "{{ api_key }}"
+        validate_certs: false
+        status_code: 200
+      register: login_response
 
+    - name: Set session ID
+      ansible.builtin.set_fact:
+        session_id: "{{ login_response.json.sid }}"
+    
     - name: Get Checkpoint Gaia facts
       check_point.gaia.cp_gaia_version_facts:
+      vars:
+        ansible_httpapi_extra_args:
+          headers:
+            X-chkp-sid: "{{ session_id }}"
       register: device_facts
       ignore_errors: true
