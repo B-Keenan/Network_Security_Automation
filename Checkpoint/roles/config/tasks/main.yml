@@ -25,7 +25,9 @@
 
 - name: List tasks
   ansible.builtin.command: "ls roles/config/tasks/."
-  connection: local
+  # Testing connection override as a temp workaround 
+  vars:
+    ansible_connection: local
   changed_when: false
   register: dir_out
   delegate_to: localhost
