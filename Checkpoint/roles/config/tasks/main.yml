@@ -4,33 +4,14 @@
     that:
       - task_selection is defined
 
-##
-- name: Debug connection
-  ansible.builtin.debug:
-    var: ansible_connection
-  connection: local
-  delegate_to: localhost
-
-- name: Check directory
-  ansible.builtin.stat:
-    path: "{{ playbook_dir }}/roles/config/tasks"
-  connection: local
-  delegate_to: localhost
-  register: dir_stat
-
-- name: Debug directory
-  ansible.builtin.debug:
-    var: dir_stat.stat.exists
-##
-
 - name: List tasks
   ansible.builtin.command: "ls roles/config/tasks/."
-  # Testing connection override as a temp workaround 
+  # Testing connection override as a temp workaround - defaulting to httpapi
   vars:
     ansible_connection: local
   changed_when: false
   register: dir_out
-  delegate_to: localhost
+  #delegate_to: localhost - likely not required due to connection override
 
 - name: Include tasks when in task_selection
   when:

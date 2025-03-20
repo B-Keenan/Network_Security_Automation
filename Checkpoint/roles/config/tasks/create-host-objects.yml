@@ -1,4 +1,23 @@
 ---
+## - debugs
+- name: Debug connection vars
+  ansible.builtin.debug:
+    msg:
+      - "Host: {{ inventory_hostname }}"
+      - "Connection: {{ ansible_connection }}"
+      - "API Key: {{ ansible_api_key }}"
+      - "Network OS: {{ ansible_network_os }}"
+
+- name: Test Checkpoint API login
+  check_point.mgmt.cp_mgmt_login:
+    auto_publish_session: false
+  register: login_result
+
+- name: Debug login result
+  ansible.builtin.debug:
+    var: login_result
+##
+
 - name: Add host object
   check_point.mgmt.cp_mgmt_host:
     name: "{{ host_name }}"
