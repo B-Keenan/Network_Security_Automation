@@ -8,11 +8,6 @@
       - "API Key: {{ ansible_api_key }}"
       - "Network OS: {{ ansible_network_os }}"
 
-- name: Test Checkpoint API login
-  check_point.mgmt.cp_mgmt_login:
-    auto_publish_session: false
-  register: login_result
-
 - name: Debug login result
   ansible.builtin.debug:
     var: login_result
