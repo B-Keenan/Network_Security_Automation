@@ -8,7 +8,7 @@
   block:
     - name: Login to Check Point Gaia API
       ansible.builtin.uri:
-        url: "https://{{ ansible_host }}/web_api/"
+        url: "https://{{ ansible_host }}:443/web_api/"
         method: POST
         body_format: json
         body:
