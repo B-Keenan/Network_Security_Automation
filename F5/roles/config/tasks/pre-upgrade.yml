@@ -1,0 +1,56 @@
+---
+- name: Gather pre-upgrade facts
+  delegate_to: "{{ inventory_hostname }}"
+  run_once: true
+  block:
+    - name: Register Partitions
+      shell: tmsh list auth partition | grep "auth partition" | awk '{print $3}'
+      register: partitions
+
+    - name: Register current boot volume name
+      shell: tmsh show sys software status | grep yes | grep -v no | awk '{print $1}'
+      register: cur_vol
+
+    - name: Register date on BIG-IP
+      command: date "+%F"
+      register: date
+
+    - name: Register failover state
+      command: cat /var/prompt/ps1
+      register: failover_state
+
+    - name: Check and increase iControl process timeout values if less than 180
+      shell: |
+        changed=0
+        current_icrd_timeout=$(tmsh list sys db icrd.timeout | awk '/value/ {print $2}')
+        if [ "$current_icrd_timeout" -lt 180 ]; then
+          tmsh modify sys db icrd.timeout value 180
+          changed=1
+        fi
+
+        current_restjavad_timeout=$(tmsh list sys db restjavad.timeout | awk '/value/ {print $2}')
+        if [ "$current_restjavad_timeout" -lt 180 ]; then
+          tmsh modify sys db restjavad.timeout value 180
+          changed=1
+        fi
+
+        current_restnoded_timeout=$(tmsh list sys db restnoded.timeout | awk '/value/ {print $2}')
+        if [ "$current_restnoded_timeout" -lt 180 ]; then
+          tmsh modify sys db restnoded.timeout value 180
+          changed=1
+        fi
+        echo "changed=$changed"
+      register: timeout_check
+
+    - name: Save changes
+      command: tmsh save sys config
+      when: timeout_check.stdout_lines[-1] | regex_search('changed=1')
+
+    - name: Restart restjavad restnoded
+      command: tmsh restart sys service restjavad restnoded
+      when: timeout_check.stdout_lines[-1] | regex_search('changed=1')
+
+    - name: Wait for services to start
+      wait_for:
+        timeout: 30
+      when: timeout_check.stdout_lines[-1] | regex_search('changed=1')
