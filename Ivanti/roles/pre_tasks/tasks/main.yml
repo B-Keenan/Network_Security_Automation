@@ -1,0 +1,14 @@
+---
+- name: Check all variables
+  ansible.builtin.assert:
+    that:
+      - ansible_host is defined
+
+- name: Request API key
+  shell: |
+    curl -ki -u "{{ ansible_user }}:{{ ansible_ssh_pass }}" "https://{{ ansible_host }}/api/v1/auth"
+  register: response_payload
+
+- name: Extract API key
+  set_fact:
+    api_key: "{{ (response_payload.stdout | default('')) | regex_search('\"api_key\":\"([^\"]+)\"', '\\1') }}"

@@ -1,0 +1,7 @@
+[pulse]
+pcs.example.com ansible_host=10.255.32.191 ansible_user=admin ansible_ssh_pass='[3kVN-scZpM4oXQSLh2D'
+
+[pulse:vars]
+pc_name = "PC000001"
+username = "ben"
+domain = "example.com"

@@ -1,0 +1,16 @@
+---
+- name: Generate qkview
+  f5networks.f5_modules.bigip_qkview:
+    exclude_core: true
+    filename: "/var/tmp/{{ inventory_hostname }}.qkview"
+    only_create_file: true
+    provider: "{{ provider }}"
+    timeout: 600
+  register: qkview_result
+
+- name: Wait for qkview file to be created
+  ansible.builtin.wait_for:
+    path: "/var/tmp/{{ inventory_hostname }}.qkview"
+    state: present
+    timeout: 600  # Wait up to 10 minutes for the file to appear
+  when: qkview_result is success

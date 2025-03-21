@@ -1,0 +1,8 @@
+---
+- name: Gather local time
+  block:
+    - name: Gather local time
+      ansible.builtin.setup:
+      delegate_to: localhost
+      delegate_facts: true
+      run_once: true

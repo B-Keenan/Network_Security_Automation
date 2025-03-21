@@ -1,0 +1,230 @@
+# Upgrade will be performed on a single host.
+# Not for DNS or vCMP configurations.
+#
+# AWX extra variables: upgrade_iso
+---
+- name: Start F5 BIG-IP TMOS Software Upgrade
+  block:
+  - name: Perform pre-upgrade tasks
+    ansible.builtin.include_tasks: pre-upgrade.yml
+
+  - name: Save running configuration
+    f5networks.f5_modules.bigip_config:
+      save: yes
+      provider: "{{ provider }}"
+
+  - name: Gather pre-upgrade config facts
+    f5networks.f5_modules.bigip_device_info:
+      partition: "{{ item }}"
+      gather_subset:
+        - virtual-servers
+        - ltm-pools
+        - self-ips
+        - vlans
+      provider: "{{ provider }}"
+    loop: "{{ partitions.stdout_lines }}"
+    register: f5_info
+
+  - name: Pre-upgrade parse
+    ansible.builtin.set_fact:
+      startvirtstats: "{{ f5_info.results | map(attribute='virtual_servers') | flatten
+        | items2dict(key_name='full_path', value_name='availability_status') }}"
+      startpoolstats: "{{ f5_info.results | map(attribute='ltm_pools') | flatten
+        | items2dict(key_name='full_path', value_name='availability_status') }}"
+      startselfstats: "{{ f5_info.results | map(attribute='self_ips') | flatten
+        | items2dict(key_name='full_path', value_name='vlan') }}"
+      startvlanstats: "{{ f5_info.results | map(attribute='vlans') | flatten
+        | items2dict(key_name='full_path', value_name='tag') }}"
+  
+  - name: Retrieve license
+    f5networks.f5_modules.bigip_device_info:
+      gather_subset:
+        - license
+      provider: "{{ provider }}"
+    register: license_subset
+
+  - name: Reactivate license
+    f5networks.f5_modules.bigip_device_license:
+      license_key: "{{ license_subset.registration_key }}"
+      provider: "{{ provider }}"
+
+  - name: Wait for device to return to Active
+    ansible.builtin.wait_for:
+      path: /var/prompt/ps1
+      search_regex: Active
+    delegate_to: "{{ inventory_hostname }}"
+
+  - name: Save running configuration
+    f5networks.f5_modules.bigip_config:
+      save: yes
+      provider: "{{ provider }}"
+  
+  - name: Create a UCS
+    f5networks.f5_modules.bigip_ucs_fetch:
+      async_timeout: 1800
+      src: "pre-upgrade-{{ inventory_hostname }}-{{ date.stdout }}.ucs"
+      only_create_file: true
+      provider: "{{ provider }}"
+
+  - name: Copy UCS to a remote server
+    f5networks.f5_modules.bigip_command:
+      commands:
+        - "run /util bash -c 'scp /var/local/ucs/pre-upgrade-{{ inventory_hostname }}-{{ date.stdout }}.ucs benk@10.255.32.212:/tmp/'"
+      provider: "{{ provider }}"
+    
+  - name: Remove UCS on the F5
+    f5networks.f5_modules.bigip_ucs:
+      ucs: "pre-upgrade-{{ inventory_hostname }}-{{ date.stdout }}.ucs"
+      state: absent
+      provider: "{{ provider }}"
+  
+  - name: Upload upgrade image
+    f5networks.f5_modules.bigip_software_image:
+      image: "{{ '/tmp/' + upgrade_iso }}"
+      provider: "{{ provider }}"
+  
+  - name: Wait for image to become available
+    wait_for:
+      timeout: 30
+
+    # Add a condition which increments the volume number by .1 if no other volume exists.
+  - name: Get available volume number to use
+    shell: tmsh show sys software status | grep no | awk '{print $1}' | head -1
+    register: vol
+  
+  - name: Install BIG-IP software
+    bigip_software_install:
+      image: "{{ upgrade_iso }}"
+      state: activated
+      volume: "{{ vol.stdout }}"
+      provider: "{{ provider }}"
+    delegate_to: localhost
+  
+  - name: Wait for device to return to Active
+    wait_for:
+      path: /var/prompt/ps1
+      search_regex: Active
+
+  - name: Allow some time for health monitoring to finish
+    wait_for:
+      # The timeout should be more than the maximum health monitor timeout to allow Unknown states to change to Offline.
+      timeout: 300
+    delegate_to: localhost
+  
+  - block:
+      - name: Gather post-upgrade config facts
+        bigip_device_info:
+          partition: "{{ item }}"
+          gather_subset:
+            - virtual-servers
+            - ltm-pools
+            - self-ips
+            - vlans
+          provider: "{{ provider }}"
+        loop: "{{ partitions.stdout_lines }}"
+        register: f5_info
+        delegate_to: localhost
+
+      - name: Post-upgrade parse
+        set_fact:
+          endvirtstats: "{{ f5_info.results | map(attribute='virtual_servers') | flatten
+            | items2dict(key_name='full_path', value_name='availability_status') }}"
+          endpoolstats: "{{ f5_info.results | map(attribute='ltm_pools') | flatten
+            | items2dict(key_name='full_path', value_name='availability_status') }}"
+          endselfstats: "{{ f5_info.results | map(attribute='self_ips') | flatten
+            | items2dict(key_name='full_path', value_name='vlan') }}"
+          endvlanstats: "{{ f5_info.results | map(attribute='vlans') | flatten
+            | items2dict(key_name='full_path', value_name='tag') }}"
+      
+      - name: Check Virtual Servers
+        assert:
+          that:
+            - item.value == endvirtstats[item.key]
+          fail_msg: "Virtual server '{{ item.key }}' state changed from '{{ item.value }}' to '{{ endvirtstats[item.key] }}'"
+          success_msg: "{{ item.key }} state unchanged"
+          quiet: yes
+        loop: "{{ startvirtstats|dict2items }}"
+        loop_control:
+          label: "{{ item.key }}"
+
+      - name: Check Pools
+        assert:
+          that:
+            - item.value == endpoolstats[item.key]
+          fail_msg: "Pool '{{ item.key }}' state changed from '{{ item.value }}' to '{{ endpoolstats[item.key] }}'"
+          success_msg: "{{ item.key }} state unchanged"
+          quiet: yes
+        loop: "{{ startpoolstats|dict2items }}"
+        loop_control:
+          label: "{{ item.key }}"
+
+      - name: Check Self-IPs
+        assert:
+          that:
+            - item.value == endselfstats[item.key]
+          fail_msg: "Self IP '{{ item.key }}' state changed from '{{ item.value }}' to '{{ endselfstats[item.key] }}'"
+          success_msg: "{{ item.key }} state unchanged"
+          quiet: yes
+        loop: "{{ startselfstats|dict2items }}"
+        loop_control:
+          label: "{{ item.key }}"
+
+      - name: Check VLANs
+        assert:
+          that:
+            - item.value == endvlanstats[item.key]
+          fail_msg: "VLAN '{{ item.key }}' state changed from '{{ item.value }}' to '{{ endvlanstats[item.key] }}'"
+          success_msg: "{{ item.key }} state unchanged"
+          quiet: yes
+        loop: "{{ startvlanstats|dict2items }}"
+        loop_control:
+          label: "{{ item.key }}"
+
+    rescue:
+      - name: Send email notification
+        mail:
+          host: smtp.scmp.host
+          port: 25
+          to: ben.keenan@example.com
+          from: ansible-cm1@example.com
+          subject: 'Post checks failed for "{{ inventory_hostname }}"'
+          body: 'Device "{{ inventory_hostname }}" has mismatch of object state for either Virtual Servers, Pools, Self IPs or VLAN tag IDs. Check logs for more details /opt/ansible/logs/ltmClusterUpgrade.log and check the device.'
+        delegate_to: localhost
+      
+  - name: Backup new version configuration
+    bigip_ucs_fetch:
+      async_timeout: 1800
+      src: "{{ inventory_hostname + '-' + date.stdout +  '-post-upgrade-backup.ucs' }}"
+      dest: "{{ '/opt/ansible/backups/' + inventory_hostname + '-' + date.stdout +  '-post-upgrade-backup.ucs' }}"
+      provider: "{{ provider }}"
+    delegate_to: localhost
+
+  - name: Remove UCS on F5
+    bigip_ucs:
+      ucs: "{{ inventory_hostname + '-' + date.stdout +  '-post-upgrade-backup.ucs' }}"
+      state: absent
+      provider: "{{ provider }}"
+    delegate_to: localhost
+
+  - name: Send a success email notification
+    mail:
+      host: smtp.scmp.host
+      port: 25
+      to: ben.keenan@example.com
+      from: ansible-cm1@example.com
+      subject: 'Upgrade completed for "{{ inventory_hostname }}"'
+      body: 'Host "{{ inventory_hostname }}" was successfully upgraded'
+    delegate_to: localhost
+
+  rescue:
+    - name: Upgrade failed
+      mail:
+        host: smtp.scmp.host
+        port: 25
+        to: ben.keenan@example.com
+        from: ansible-cm1@example.com
+        subject: 'Upgrade failed for "{{ inventory_hostname }}"'
+        body: 'Upgrade failed for device "{{ inventory_hostname }}". No further action has been taken. Check log file for more #details /opt/ansible/logs/ltmClusterUpgrade.log'
+      delegate_to: localhost
+          
+  when: "'Active' in failover_state.stdout"

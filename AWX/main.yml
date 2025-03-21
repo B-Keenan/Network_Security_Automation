@@ -1,0 +1,15 @@
+---
+- name: Pre gather facts Playbook
+  hosts: localhost
+  gather_facts: false
+
+  roles:
+    - role: pre_datetime
+      tags:
+        - pre_check
+    - role: pre_awx_info
+      tags:
+        - pre_check
+  
+  vars:
+    ansible_connection: local

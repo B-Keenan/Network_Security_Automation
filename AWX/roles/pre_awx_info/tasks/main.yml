@@ -1,0 +1,34 @@
+---
+- name: AWX information
+  delegate_to: localhost
+  run_once: true
+  block:
+    - name: Show pwd
+      ansible.builtin.shell: |
+        pwd
+      changed_when: false
+
+    - name: Show ansible version
+      ansible.builtin.shell: |
+        ansible --version
+      changed_when: false
+
+    - name: Show ansible-config dump
+      ansible.builtin.shell: |
+        ansible-config dump
+      changed_when: false
+
+    - name: Show ansible-galaxy collection list
+      ansible.builtin.shell: |
+        ansible-galaxy collection list
+      changed_when: false
+
+    - name: Show ansible-doc callback
+      ansible.builtin.shell: |
+        ansible-doc -t callback -l
+      changed_when: false
+
+    - name: Certificate trust list
+      ansible.builtin.shell: |
+        trust list --filter=ca-anchors
+      changed_when: false
