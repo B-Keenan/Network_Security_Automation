@@ -1,0 +1,13 @@
+---
+- name: Sync AWX Project
+  hosts: localhost
+  tasks:
+    - name: Trigger project sync
+      ansible.builtin.uri:
+        url: "https://10.255.34.202/api/v2/projects/23/update/"
+        method: POST
+        user: "admin"
+        password: "lTRcb8OIuJMpFbeg2DT3ZZt3DENo2LEU"
+        force_basic_auth: yes
+        status_code: 202
+        validate_certs: false
