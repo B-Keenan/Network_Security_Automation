@@ -1,0 +1,29 @@
+---
+- name: Fortinet Main Playbook
+  hosts: >
+    {% if awx_single_hosts_run is defined and awx_single_hosts_run | length > 0 %}
+      {{ awx_single_hosts_run }}
+    {% elif awx_hosts_vendor_selection is defined %}
+      {% if 'fortigate' in awx_hosts_vendor_selection %}
+        {{ hosts | default('') + 'fortigate,' }}
+      {% endif %}
+      {% if ('fortigate' not in awx_hosts_vendor_selection) %}
+        none
+      {% endif %}
+    {% else %}
+      localhost
+    {% endif %}
+  gather_facts: false
+
+  roles:
+    - role: config
+      tags:
+        - config
+
+  vars:
+    ansible_connection: httpapi
+    ansible_network_os: fortinet.fortios.fortios
+    ansible_httpapi_use_ssl: true
+    ansible_httpapi_validate_certs: false
+    ansible_httpapi_port: 443
+    vdom: "root"

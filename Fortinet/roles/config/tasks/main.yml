@@ -5,7 +5,7 @@
       - task_selection is defined
 
 - name: Find task files
-  ansible.builtin.command: "find roles/qkview/tasks/. -type f -name '*.yml' ! -name 'main.yml'"
+  ansible.builtin.command: "find roles/config/tasks/. -type f -name '*.yml' ! -name 'main.yml'"
   changed_when: false
   register: find_out
 

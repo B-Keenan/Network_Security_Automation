@@ -1,0 +1,3 @@
+[fortigate]
+fg01 ansible_host=10.255.126.230 ansible_user=benkee ansible_ssh_pass='"&jp|E[>}JUl_={)t-9)<"0h'
+fg02 ansible_host=10.255.126.231 ansible_user=benkee ansible_ssh_pass='"&jp|E[>}JUl_={)t-9)<"0h'

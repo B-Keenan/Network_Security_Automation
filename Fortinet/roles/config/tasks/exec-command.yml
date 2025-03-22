@@ -1,0 +1,26 @@
+---
+- name: Execute traceroute
+  vars:
+    ansible_connection: ssh
+  ansible.builtin.raw: execute traceroute 1.1.1.1
+  register: traceroute_output
+
+- name: Check if specific IP is in traceroute path
+  ansible.builtin.set_fact:
+    ip_found: "{{ '87.238.200.131' in traceroute_output.stdout }}"
+
+# For testing purposes, otherwise send email or raise ticket
+- name: Fail if IP not found
+  ansible.builtin.fail:
+    msg: "Specific IP 87.238.200.131 not found in traceroute path"
+  when: not ip_found
+#- name: Send email if IP not found
+  #mail:
+    #host: your_mail_server
+    #port: 587
+    #username: your_email@example.com
+    #password: your_email_password
+    #to: recipient@example.com
+    #subject: "Traceroute Alert"
+    #body: "Specific IP {{ expected_ip }} not found in traceroute path"
+  #when: not ip_found
