@@ -2,9 +2,6 @@
 - name: Execute traceroute
   vars:
     ansible_connection: ssh
-    ansible_ssh_user: benkee
-    ansible_ssh_pass: '"&jp|E[>}JUl_={)t-9)<"0h'
-    ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -vvv'
   ansible.builtin.raw: execute traceroute 1.1.1.1
   register: traceroute_output
 
