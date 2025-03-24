@@ -1,5 +1,7 @@
 ---
 - name: Ping test on firewall
+  hosts: cp-manager  # Replace 'firewall' with your actual host or group
+  gather_facts: no  # Optional, but it's good practice to disable fact gathering for simple tasks
   tasks:
     - name: Run ping to 8.8.8.8
       ansible.builtin.shell: ping -c 4 8.8.8.8
@@ -10,7 +12,7 @@
       ansible.builtin.debug:
         msg: "Ping to 8.8.8.8 was successful"
       when: "'64 bytes from 8.8.8.8:' in ping_result.stdout"
-      
+
     - name: Mark as failure if no '64 bytes from 8.8.8.8:' found
       ansible.builtin.fail:
         msg: "Ping to 8.8.8.8 failed"
