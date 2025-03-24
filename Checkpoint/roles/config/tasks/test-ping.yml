@@ -1,7 +1,5 @@
 ---
 - name: Ping test on firewall
-  hosts: cp-manager  # Replace 'firewall' with your actual host or group
-  gather_facts: no  # Optional, but it's good practice to disable fact gathering for simple tasks
   tasks:
     - name: Run ping to 8.8.8.8
       ansible.builtin.shell: ping -c 4 8.8.8.8
