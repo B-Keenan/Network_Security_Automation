@@ -14,11 +14,11 @@
       ansible.builtin.wait_for:
         path: "/var/tmp/{{ inventory_hostname }}.qkview"
         state: present
-        timeout: 30
+        timeout: 300
       delegate_to: "{{ inventory_hostname }}"
       ignore_errors: true
       register: file_check
-      
+
     - name: Fail if qkview file does not exist
       ansible.builtin.fail:
         msg: "qkview file does not exist after timeout"
