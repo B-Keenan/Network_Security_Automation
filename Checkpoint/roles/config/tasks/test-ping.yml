@@ -1,27 +1,15 @@
 ---
-- name: Test Ping
-  vars:
-    ansible_connection: ssh
-  ansible.builtin.raw: ping 8.8.8.8
-  register: traceroute_output
+    - name: Run ping to 8.8.8.8
+      ansible.builtin.shell: ping -c 4 8.8.8.8
+      register: ping_result
+      ignore_errors: yes
 
-- name: Check if working
-  ansible.builtin.set_fact:
-    ip_found: "{{ 'Reply from 8.8.8.8' in traceroute_output.stdout }}"
-
-# For testing purposes, otherwise send email or raise ticket
-- name: Fail if IP not found
-  ansible.builtin.fail:
-    msg: "Specific IP 87.238.200.131 not found in traceroute path"
-  when: not ip_found
-#- name: Send email if IP not found
-  #mail:
-    #host: your_mail_server
-    #port: 587
-    #username: your_email@example.com
-    #password: your_email_password
-    #to: recipient@example.com
-    #subject: "Traceroute Alert"
-    #body: "Specific IP {{ expected_ip }} not found in traceroute path"
-  #when: not ip_found
-
+    - name: Check for "Reply from 8.8.8.8" in ping output
+      ansible.builtin.debug:
+        msg: "Ping to 8.8.8.8 was successful"
+      when: "'Reply from 8.8.8.8' in ping_result.stdout"
+      
+    - name: Mark as failure if no reply
+      ansible.builtin.fail:
+        msg: "Ping to 8.8.8.8 failed"
+      when: "'Reply from 8.8.8.8' not in ping_result.stdout"
