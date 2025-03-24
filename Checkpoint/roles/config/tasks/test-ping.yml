@@ -2,7 +2,7 @@
 - name: Run ping to 8.8.8.8
   vars:
     ansible_connection: ssh
-  ansible.builtin.shell: "/usr/bin/ping -c 4 8.8.8.8"
+  ansible.builtin.shell: "ping -c 4 8.8.8.8"
   register: ping_result
 
 - name: Check for "64 bytes from 8.8.8.8:" in ping output
