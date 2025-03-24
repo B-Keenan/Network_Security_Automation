@@ -1,15 +1,16 @@
 ---
-    - name: Run ping to 8.8.8.8
-      ansible.builtin.shell: "/usr/bin/ping -c 4 8.8.8.8"
-      register: ping_result
-      ignore_errors: yes
+- name: Run ping to 8.8.8.8
+  vars:
+    ansible_connection: ssh
+  ansible.builtin.shell: "/usr/bin/ping -c 4 8.8.8.8"
+  register: ping_result
 
-    - name: Check for "64 bytes from 8.8.8.8:" in ping output
-      ansible.builtin.debug:
-        msg: "Ping to 8.8.8.8 was successful"
-      when: "'64 bytes from 8.8.8.8:' in ping_result.stdout"
+- name: Check for "64 bytes from 8.8.8.8:" in ping output
+  ansible.builtin.debug:
+    msg: "Ping to 8.8.8.8 was successful"
+  when: "'64 bytes from 8.8.8.8:' in ping_result.stdout"
 
-    - name: Mark as failure if no '64 bytes from 8.8.8.8:' found
-      ansible.builtin.fail:
-        msg: "Ping to 8.8.8.8 failed"
-      when: "'64 bytes from 8.8.8.8:' not in ping_result.stdout"
+- name: Mark as failure if no '64 bytes from 8.8.8.8:' found
+  ansible.builtin.fail:
+    msg: "Ping to 8.8.8.8 failed"
+  when: "'64 bytes from 8.8.8.8:' not in ping_result.stdout"
