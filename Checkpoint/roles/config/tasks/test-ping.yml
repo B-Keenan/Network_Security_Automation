@@ -1,6 +1,6 @@
 ---
     - name: Run ping to 8.8.8.8
-      ansible.builtin.shell: ping -c 4 8.8.8.8
+      ansible.builtin.shell: "/usr/bin/ping -c 4 8.8.8.8"
       register: ping_result
       ignore_errors: yes
 
