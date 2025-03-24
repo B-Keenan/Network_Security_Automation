@@ -10,13 +10,21 @@
       register: qkview_result
   
   rescue:
-    - name: Check if qkview file exists
-      f5networks.f5_modules.bigip_command:
-        commands: 'run /util bash -c "test -f /var/tmp/{{ inventory_hostname }}.qkview"'
-        provider: "{{ provider }}"
+    - name: Check if qkview file exists on remote host
+      ansible.builtin.wait_for:
+        path: "/var/tmp/{{ inventory_hostname }}.qkview"
+        state: present
+        timeout: 30
+      delegate_to: "{{ inventory_hostname }}"
+      ignore_errors: true
       register: file_check
+      
+    - name: Fail if qkview file does not exist
+      ansible.builtin.fail:
+        msg: "qkview file does not exist after timeout"
+      when: file_check.failed
 
-    - name: Fail if file does not exist
-      fail:
-        msg: "qkview file does not exist"
-      when: file_check.rc != 0
+    - name: Notify successful file check
+      ansible.builtin.debug:
+        msg: "qkview file exists, playbook will continue successfully"
+      when: not file_check.failed
