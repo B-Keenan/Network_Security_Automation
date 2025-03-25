@@ -5,3 +5,11 @@
   ansible.builtin.shell: "cpca_client lscert -kind SIC -stat Valid"
   register: certificate_result
 
+    - name: Show standard output of the command
+      debug:
+        msg: "{{ certificate_result.stdout }}"
+
+    - name: Show error output if there's any
+      debug:
+        msg: "{{ certificate_result.stderr }}"
+      when: certificate_result.stderr is defined and certificate_result.stderr != ''
