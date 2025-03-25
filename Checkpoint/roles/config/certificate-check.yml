@@ -1,0 +1,7 @@
+---
+- name: Collect Valid SIC Certificates
+  vars:
+    ansible_connection: ssh
+  ansible.builtin.shell: "cpca_client lscert -kind SIC -stat Valid"
+  register: certificate_result
+
