@@ -14,7 +14,7 @@
         msg: "{{ SIC_certificate_result.stderr }}"
   when: SIC_certificate_result.stderr is defined and SIC_certificate_result.stderr != ''
 
-  - name: Collect Valid VPN Certificates
+- name: Collect Valid VPN Certificates
   vars:
     ansible_connection: ssh
   ansible.builtin.shell: "cpca_client lscert -stat Valid -kind IKE"
