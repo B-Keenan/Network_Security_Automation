@@ -1,19 +1,39 @@
 ---
-- name: Assert all variables exist
-  ansible.builtin.assert:
-    that:
-      - task_selection is defined
+- name: Just-In-Time Credential Retrieval
+  ansible.builtin.uri:
+    url: "http://keycloak.awx.svc.cluster.local:8080/realms/awx-realm/protocol/openid-connect/token"
+    method: POST
+    body_format: form-urlencoded
+    body:
+      grant_type: "client_credentials"
+      client_id: "{{ client_id }}"
+      client_secret: "{{ client_secret }}"
+      status_code: 200
+    register: token_response
 
-- name: Find task files
-  ansible.builtin.command: "find roles/keycloak/tasks/. -type f -name '*.yml' ! -name 'main.yml'"
-  changed_when: false
-  register: find_out
+- name: Set access token
+  set_fact:
+    access_token: "{{ token_response.json.access_token }}"
 
-- name: Include tasks when in task_selection
-  when:
-    - task_file | basename | split('.') | first in task_selection | default([])
-  ansible.builtin.include_tasks: "{{ task_file }}"
-  loop_control:
-    loop_var: task_file
-  with_items:
-    - "{{ find_out.stdout_lines }}"
+- name: Get user attributes from Keycloak
+  ansible.builtin.uri:
+    url: "http://keycloak.awx.svc.cluster.local:8080/admin/realms/awx-realm/groups/4a55b689-22f2-4a5c-8a37-7198f8c47aad"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ access_token }}"
+    status_code: 200
+  register: user_response
+
+- name: Set credentials as facts
+  set_fact:
+    ansible_user: "{{ user_response.json.attributes['host_' + inventory_hostname + '_username'][0] }}"
+    ansible_password: "{{ user_response.json.attributes['host_' + inventory_hostname + '_password'][0] }}"
+
+- name: Debug credentials (for testing)
+  debug:
+    msg: "Host: {{ inventory_hostname }}, Username: {{ ansible_user }}, Password: {{ ansible_password }}"
+
+- name: Fail if credentials are missing
+  fail:
+    msg: "Credentials for {{ inventory_hostname }} not found in Keycloak"
+  when: not user_response.json.attributes['host_' + inventory_hostname + '_username'] or not user_response.json.attributes['host_' + inventory_hostname + '_password']
