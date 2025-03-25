@@ -28,3 +28,18 @@
   debug:
         msg: "{{ IKE_certificate_result.stderr }}"
   when: IKE_certificate_result.stderr is defined and IKE_certificate_result.stderr != ''
+
+ - name: Collect Valid ICA Certificates
+  vars:
+    ansible_connection: ssh
+  ansible.builtin.shell: "cpopenssl pkcs12 -in $FWDIR/conf/InternalCA.p12 -nokeys -nomacver -passin pass: 2>/dev/null | cpopenssl x509 -noout -enddate"
+  register: ICA_certificate_result
+
+- name:  show standard output of the command
+  debug:
+        msg: "{{ ICA_certificate_result.stdout }}"
+
+- name: Show error output if there's any
+  debug:
+        msg: "{{ ICA_certificate_result.stderr }}"
+  when: ICA_certificate_result.stderr is defined and ICA_certificate_result.stderr != ''
