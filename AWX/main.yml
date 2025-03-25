@@ -10,6 +10,9 @@
     - role: pre_awx_info
       tags:
         - pre_check
+    - role: keycloak
+      tags:
+        - jit_creds
   
   vars:
     ansible_connection: local
