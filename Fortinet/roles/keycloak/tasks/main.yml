@@ -29,14 +29,13 @@
 
 - name: Set credentials as hostvars for each fortigate host
   set_fact:
-    hostvars[inventory_hostname]['ansible_user']: "{{ user_response.json.attributes['host_' + item + '_username'][0] }}"
-    hostvars[inventory_hostname]['ansible_password']: "{{ user_response.json.attributes['host_' + item + '_password'][0] }}"
+    fortigate_credentials: "{{ fortigate_credentials | default({}) | combine({item: {'ansible_user': user_response.json.attributes['host_' + item + '_username'][0], 'ansible_password': user_response.json.attributes['host_' + item + '_password'][0]}}) }}"
   loop: "{{ groups['fortigate'] }}"
-  when: "'host_' + item + '_username' in user_response.json.attributes"
+  when: "'host_' + item + '_username' in user_response.json.attributes and 'host_' + item + '_password' in user_response.json.attributes"
   delegate_to: localhost
 
 - name: Debug credentials set on control node
   debug:
-    msg: "Host: {{ item }}, Username: {{ hostvars[item]['ansible_user'] }}, Password: {{ hostvars[item]['ansible_password'] }}"
+    msg: "Host: {{ item }}, Username: {{ fortigate_credentials[item]['ansible_user'] }}, Password: {{ fortigate_credentials[item]['ansible_password'] }}"
   loop: "{{ groups['fortigate'] }}"
   delegate_to: localhost
