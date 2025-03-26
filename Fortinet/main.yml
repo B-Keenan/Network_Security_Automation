@@ -16,9 +16,6 @@
   gather_facts: false
 
   roles:
-    - role: keycloak
-      tags:
-        - always
     - role: config
       tags:
         - config
