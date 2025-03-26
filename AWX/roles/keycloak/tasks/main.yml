@@ -1,8 +1,4 @@
 ---
-- name: Debug injected variables
-  debug:
-    msg: "Client ID: {{ client_id }}, Client Secret: {{ client_secret }}"
-
 - name: Just-In-Time Credential Retrieval
   ansible.builtin.uri:
     url: "http://keycloak.awx.svc.cluster.local:8080/realms/awx-realm/protocol/openid-connect/token"
@@ -13,31 +9,42 @@
       client_id: "{{ client_id }}"
       client_secret: "{{ client_secret }}"
       status_code: 200
-    register: token_response
+  register: token_response
 
 - name: Set access token
   set_fact:
     access_token: "{{ token_response.json.access_token }}"
 
-- name: Get user attributes from Keycloak
+- name: Get list of groups from Keycloak
   ansible.builtin.uri:
-    url: "http://keycloak.awx.svc.cluster.local:8080/admin/realms/awx-realm/groups/4a55b689-22f2-4a5c-8a37-7198f8c47aad"
+    url: "http://keycloak.awx.svc.cluster.local:8080/admin/realms/awx-realm/groups"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ access_token }}"
+    status_code: 200
+  register: groups_response
+
+- name: Determine Keycloak group name based on inventory
+  set_fact:
+    keycloak_group_name: "{{ inventory_group_mapping[group_names[0]] | default(group_names[0] + '-group') }}"
+  vars:
+    group_names: "{{ group_names | default(ansible_play_hosts_all | map('extract', hostvars, 'group_names') | flatten | unique) }}"
+
+- name: Extract group ID for specified group
+  set_fact:
+    group_id: "{{ (groups_response.json | selectattr('name', 'equalto', keycloak_group_name) | first).id }}"
+
+- name: Get user attributes from Keycloak group
+  ansible.builtin.uri:
+    url: "http://keycloak.awx.svc.cluster.local:8080/admin/realms/awx-realm/groups/{{ group_id }}"
     method: GET
     headers:
       Authorization: "Bearer {{ access_token }}"
     status_code: 200
   register: user_response
 
-- name: Set credentials as facts
+- name: Set credentials as hostvars for each fortigate host
   set_fact:
-    ansible_user: "{{ user_response.json.attributes['host_' + inventory_hostname + '_username'][0] }}"
-    ansible_password: "{{ user_response.json.attributes['host_' + inventory_hostname + '_password'][0] }}"
-
-- name: Debug credentials (for testing)
-  debug:
-    msg: "Host: {{ inventory_hostname }}, Username: {{ ansible_user }}, Password: {{ ansible_password }}"
-
-- name: Fail if credentials are missing
-  fail:
-    msg: "Credentials for {{ inventory_hostname }} not found in Keycloak"
-  when: not user_response.json.attributes['host_' + inventory_hostname + '_username'] or not user_response.json.attributes['host_' + inventory_hostname + '_password']
+    fortigate_credentials: "{{ fortigate_credentials | default({}) | combine({item: {'ansible_user': user_response.json.attributes['host_' + item + '_username'][0], 'ansible_password': user_response.json.attributes['host_' + item + '_password'][0]}}) }}"
+  loop: "{{ groups['fortigate'] }}"
+  when: "'host_' + item + '_username' in user_response.json.attributes and 'host_' + item + '_password' in user_response.json.attributes"

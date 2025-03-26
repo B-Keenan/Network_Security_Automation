@@ -16,3 +16,7 @@
   
   vars:
     ansible_connection: local
+    client_id: "{{ client_id }}"
+    client_secret: "{{ client_secret }}"
+    keycloak_groups:
+      - fg-group

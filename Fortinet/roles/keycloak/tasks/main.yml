@@ -6,8 +6,8 @@
     body_format: form-urlencoded
     body:
       grant_type: "client_credentials"
-      client_id: "awx-client"
-      client_secret: "MrFSYIRzzqQVNlcmhfNgy9Q4ohsKSObs"
+      client_id: "{{ client_id }}"
+      client_secret: "{{ client_secret }}"
       status_code: 200
   register: token_response
   delegate_to: localhost
@@ -17,6 +17,15 @@
     access_token: "{{ token_response.json.access_token }}"
   delegate_to: localhost
 
+- name: Get attributes for each group
+  ansible.builtin.uri:
+    url: "http://keycloak.awx.svc.cluster.local:8080/admin/realms/awx-realm/groups/{{ (groups_response.json | selectattr('name', 'equalto', item) | first).id }}"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ access_token }}"
+    status_code: 200
+  register: group_responses
+  
 - name: Get user attributes from Keycloak
   ansible.builtin.uri:
     url: "http://keycloak.awx.svc.cluster.local:8080/admin/realms/awx-realm/groups/4a55b689-22f2-4a5c-8a37-7198f8c47aad"
@@ -32,10 +41,4 @@
     fortigate_credentials: "{{ fortigate_credentials | default({}) | combine({item: {'ansible_user': user_response.json.attributes['host_' + item + '_username'][0], 'ansible_password': user_response.json.attributes['host_' + item + '_password'][0]}}) }}"
   loop: "{{ groups['fortigate'] }}"
   when: "'host_' + item + '_username' in user_response.json.attributes and 'host_' + item + '_password' in user_response.json.attributes"
-  delegate_to: localhost
-
-- name: Debug credentials set on control node
-  debug:
-    msg: "Host: {{ item }}, Username: {{ fortigate_credentials[item]['ansible_user'] }}, Password: {{ fortigate_credentials[item]['ansible_password'] }}"
-  loop: "{{ groups['fortigate'] }}"
   delegate_to: localhost

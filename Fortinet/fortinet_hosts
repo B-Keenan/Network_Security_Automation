@@ -1,6 +1,6 @@
 [fortigate]
-fg01 ansible_host=10.255.126.230 ansible_user=benkee ansible_ssh_pass='"&jp|E[>}JUl_={)t-9)<"0h'
-fg02 ansible_host=10.255.126.231 ansible_user=benkee ansible_ssh_pass='"&jp|E[>}JUl_={)t-9)<"0h'
+fg01 ansible_host=10.255.126.230
+fg02 ansible_host=10.255.126.231
 
 [fortigate:vars]
 ansible_ssh_common_args: '-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
