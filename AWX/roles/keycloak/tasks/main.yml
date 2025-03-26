@@ -24,11 +24,21 @@
     status_code: 200
   register: groups_response
 
-- name: Determine Keycloak group name based on inventory
+- name: Determine Keycloak group name based on target context
   set_fact:
-    keycloak_group_name: "{{ inventory_group_mapping[group_names[0]] | default(group_names[0] + '-group') }}"
-  vars:
-    group_names: "{{ group_names | default(ansible_play_hosts_all | map('extract', hostvars, 'group_names') | flatten | unique) }}"
+    keycloak_group_name: >
+      {% if awx_single_hosts_run is defined and awx_single_hosts_run | length > 0 %}
+        {{ hostvars[awx_single_hosts_run]['group_names'] | first }}
+      {% elif awx_hosts_vendor_selection is defined and awx_hosts_vendor_selection | length > 0 %}
+        {{ awx_hosts_vendor_selection | first }}
+      {% else %}
+        {{ '' }}
+      {% endif %}
+
+- name: Fail if no group name is determined
+  fail:
+    msg: "No valid Keycloak group name determined. Ensure awx_single_hosts_run or awx_hosts_vendor_selection is provided."
+  when: keycloak_group_name | length == 0
 
 - name: Extract group ID for specified group
   set_fact:
@@ -43,8 +53,8 @@
     status_code: 200
   register: user_response
 
-- name: Set credentials as hostvars for each fortigate host
+- name: Set credentials as hostvars for targeted hosts
   set_fact:
-    fortigate_credentials: "{{ fortigate_credentials | default({}) | combine({item: {'ansible_user': user_response.json.attributes['host_' + item + '_username'][0], 'ansible_password': user_response.json.attributes['host_' + item + '_password'][0]}}) }}"
-  loop: "{{ groups['fortigate'] }}"
+    credentials: "{{ credentials | default({}) | combine({item: {'ansible_user': user_response.json.attributes['host_' + item + '_username'][0], 'ansible_password': user_response.json.attributes['host_' + item + '_password'][0]}}) }}"
+  loop: "{{ ansible_play_hosts_all }}"
   when: "'host_' + item + '_username' in user_response.json.attributes and 'host_' + item + '_password' in user_response.json.attributes"
