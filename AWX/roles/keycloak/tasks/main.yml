@@ -6,8 +6,8 @@
     body_format: form-urlencoded
     body:
       grant_type: "client_credentials"
-      client_id: "{{ client_id }}"
-      client_secret: "{{ client_secret }}"
+      client_id: "awx-client"
+      client_secret: "MrFSYIRzzqQVNlcmhfNgy9Q4ohsKSObs"
       status_code: 200
   register: token_response
 
