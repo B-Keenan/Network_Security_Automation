@@ -24,6 +24,10 @@
     status_code: 200
   register: groups_response
 
+- name: Debug inventory groups and awx_single_hosts_run
+  debug:
+    msg: "Groups: {{ groups }}, awx_single_hosts_run: {{ awx_single_hosts_run | default('not set') }}"
+    
 - name: Determine Keycloak group name based on target context
   set_fact:
     keycloak_group_name: >
