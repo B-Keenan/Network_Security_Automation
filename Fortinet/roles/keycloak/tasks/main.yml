@@ -24,24 +24,13 @@
     status_code: 200
   register: groups_response
 
-- name: Debug inventory groups and awx_single_hosts_run
-  debug:
-    msg: "Groups: {{ groups }}, awx_single_hosts_run: {{ awx_single_hosts_run | default('not set') }}"
-
-- name: Determine Keycloak group name based on target context
+- name: Determine Keycloak group name based on AWX survey
   set_fact:
-    keycloak_group_name: >
-      {% if awx_single_hosts_run is defined and awx_single_hosts_run | length > 0 %}
-        {{ groups | dict2items | selectattr('value', 'contains', awx_single_hosts_run) | map(attribute='key') | default([]) | first | default('') }}
-      {% elif awx_hosts_vendor_selection is defined and awx_hosts_vendor_selection | length > 0 %}
-        {{ awx_hosts_vendor_selection | first }}
-      {% else %}
-        {{ '' }}
-      {% endif %}
+    keycloak_group_name: "{{ awx_hosts_vendor_selection }}"
 
 - name: Fail if no group name is determined
   fail:
-    msg: "No valid Keycloak group name determined. Ensure awx_single_hosts_run or awx_hosts_vendor_selection is provided."
+    msg: "No valid Keycloak group name determined. Ensure AWX Survey provides awx_hosts_vendor_selection."
   when: keycloak_group_name | length == 0
 
 - name: Extract group ID for specified group
