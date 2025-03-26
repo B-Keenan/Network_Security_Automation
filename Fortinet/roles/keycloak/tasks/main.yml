@@ -1,0 +1,47 @@
+---
+- name: Debug injected variables
+  debug:
+    msg: "Client ID: {{ client_id }}, Client Secret: {{ client_secret }}"
+  delegate_to: localhost
+
+- name: Just-In-Time Credential Retrieval
+  ansible.builtin.uri:
+    url: "http://keycloak.awx.svc.cluster.local:8080/realms/awx-realm/protocol/openid-connect/token"
+    method: POST
+    body_format: form-urlencoded
+    body:
+      grant_type: "client_credentials"
+      client_id: "{{ client_id }}"
+      client_secret: "{{ client_secret }}"
+      status_code: 200
+  register: token_response
+  delegate_to: localhost
+
+- name: Set access token
+  set_fact:
+    access_token: "{{ token_response.json.access_token }}"
+  delegate_to: localhost
+
+- name: Get user attributes from Keycloak
+  ansible.builtin.uri:
+    url: "http://keycloak.awx.svc.cluster.local:8080/admin/realms/awx-realm/groups/4a55b689-22f2-4a5c-8a37-7198f8c47aad"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ access_token }}"
+    status_code: 200
+  register: user_response
+  delegate_to: localhost
+
+- name: Set credentials as hostvars for each fortigate host
+  set_fact:
+    hostvars[inventory_hostname]['ansible_user']: "{{ user_response.json.attributes['host_' + item + '_username'][0] }}"
+    hostvars[inventory_hostname]['ansible_password']: "{{ user_response.json.attributes['host_' + item + '_password'][0] }}"
+  loop: "{{ groups['fortigate'] }}"
+  when: "'host_' + item + '_username' in user_response.json.attributes"
+  delegate_to: localhost
+
+- name: Debug credentials set on control node
+  debug:
+    msg: "Host: {{ item }}, Username: {{ hostvars[item]['ansible_user'] }}, Password: {{ hostvars[item]['ansible_password'] }}"
+  loop: "{{ groups['fortigate'] }}"
+  delegate_to: localhost
