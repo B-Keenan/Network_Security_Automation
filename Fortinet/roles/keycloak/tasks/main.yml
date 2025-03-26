@@ -35,7 +35,7 @@
 
 - name: Extract group ID for specified group
   set_fact:
-    group_id: "{{ (groups_response.json | selectattr('name', 'equalto', keycloak_group_name) | first).id }}"
+    group_id: "{{ (groups_response.json | selectattr('name', 'equalto', keycloak_group_name[0])).id }}"
 
 - name: Get user attributes from Keycloak group
   ansible.builtin.uri:
