@@ -30,3 +30,5 @@
     ansible_httpapi_validate_certs: false
     ansible_httpapi_port: 443
     vdom: "root"
+    client_id: "{{ client_id }}"
+    client_secret: "{{ client_secret }}"
