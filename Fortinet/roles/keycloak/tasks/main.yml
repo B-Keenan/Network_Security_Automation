@@ -28,15 +28,23 @@
   set_fact:
     keycloak_group_name: "{{ awx_hosts_vendor_selection }}"
 
-- name: Fail if no group name is determined
-  fail:
-    msg: "No valid Keycloak group name determined. Ensure AWX Survey provides awx_hosts_vendor_selection."
-  when: keycloak_group_name | length == 0
-
 - name: Extract group ID for specified group
   set_fact:
-    group_id: "{{ (groups_response.json | selectattr('name', 'equalto', keycloak_group_name[0])).id }}"
+    group_id: "{{ matching_groups[0].id }}"
+  vars:
+    matching_groups: "{{ groups_response.json | selectattr('name', 'equalto', keycloak_group_name[0]) | list }}"
+  when: 
+    - matching_groups | length > 0
+    - matching_groups | length <= 1
+  register: group_id_result
 
+- name: Fail if multiple groups match the name
+  fail:
+    msg: "Multiple groups found with name '{{ keycloak_group_name[0] }}'. Found {{ matching_groups | length }} matches. Group names must be unique."
+  when: 
+    - matching_groups is defined
+    - matching_groups | length > 1
+    
 - name: Get user attributes from Keycloak group
   ansible.builtin.uri:
     url: "http://keycloak.awx.svc.cluster.local:8080/admin/realms/awx-realm/groups/{{ group_id }}"
