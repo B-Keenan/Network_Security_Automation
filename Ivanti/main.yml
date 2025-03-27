@@ -16,6 +16,9 @@
   gather_facts: false
 
   roles:
+    - role: keycloak
+      tags:
+        - always
     - role: pre_tasks
       tags:
         - always

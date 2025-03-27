@@ -1,0 +1,61 @@
+---
+- name: Just-In-Time Credential Retrieval
+  ansible.builtin.uri:
+    url: "http://keycloak.awx.svc.cluster.local:8080/realms/awx-realm/protocol/openid-connect/token"
+    method: POST
+    body_format: form-urlencoded
+    body:
+      grant_type: "client_credentials"
+      client_id: "awx-client"
+      client_secret: "MrFSYIRzzqQVNlcmhfNgy9Q4ohsKSObs"
+      status_code: 200
+  register: token_response
+
+- name: Set access token
+  set_fact:
+    access_token: "{{ token_response.json.access_token }}"
+
+- name: Get list of groups from Keycloak
+  ansible.builtin.uri:
+    url: "http://keycloak.awx.svc.cluster.local:8080/admin/realms/awx-realm/groups"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ access_token }}"
+    status_code: 200
+  register: groups_response
+
+- name: Determine Keycloak group name based on AWX survey
+  set_fact:
+    keycloak_group_name: "{{ awx_hosts_vendor_selection }}"
+
+- name: Extract group ID for specified group
+  set_fact:
+    group_id: "{{ matching_groups[0].id }}"
+  vars:
+    matching_groups: "{{ groups_response.json | selectattr('name', 'equalto', keycloak_group_name[0]) | list }}"
+  when: 
+    - matching_groups | length > 0
+    - matching_groups | length <= 1
+  register: group_id_result
+
+- name: Fail if multiple groups match the name
+  fail:
+    msg: "Multiple groups found with name '{{ keycloak_group_name[0] }}'. Found {{ matching_groups | length }} matches. Group names must be unique."
+  when: 
+    - matching_groups is defined
+    - matching_groups | length > 1
+    
+- name: Get user attributes from Keycloak group
+  ansible.builtin.uri:
+    url: "http://keycloak.awx.svc.cluster.local:8080/admin/realms/awx-realm/groups/{{ group_id }}"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ access_token }}"
+    status_code: 200
+  register: user_response
+
+- name: Set credentials as hostvars for targeted hosts
+  set_fact:
+    credentials: "{{ credentials | default({}) | combine({item: {'ansible_user': user_response.json.attributes['host_' + item + '_username'][0], 'ansible_password': user_response.json.attributes['host_' + item + '_password'][0]}}) }}"
+  loop: "{{ ansible_play_hosts_all }}"
+  when: "'host_' + item + '_username' in user_response.json.attributes and 'host_' + item + '_password' in user_response.json.attributes"
