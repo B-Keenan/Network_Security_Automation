@@ -25,8 +25,8 @@
   register: groups_response
 
 - name: Determine Keycloak group name based on AWX survey
-      set_fact:
-        keycloak_group_name: "{{ awx_hosts_vendor_selection }}"
+  set_fact:
+    keycloak_group_name: "{{ awx_hosts_vendor_selection }}"
 
 - name: Fail if no group name is determined
   fail:
