@@ -1,0 +1,19 @@
+---
+- name: Assert all variables exist
+  ansible.builtin.assert:
+    that:
+      - task_selection is defined
+
+- name: Find task files
+  ansible.builtin.command: "find roles/general/tasks/. -type f -name '*.yml' ! -name 'main.yml'"
+  changed_when: false
+  register: find_out
+
+- name: Include tasks when in task_selection
+  when:
+    - task_file | basename | split('.') | first in task_selection | default([])
+  ansible.builtin.include_tasks: "{{ task_file }}"
+  loop_control:
+    loop_var: task_file
+  with_items:
+    - "{{ find_out.stdout_lines }}"

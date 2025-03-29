@@ -13,6 +13,14 @@
     - role: keycloak
       tags:
         - jit_creds
-  
+    - role: general
+      tags:
+        - general
+        
   vars:
     ansible_connection: local
+    awx_url: "https://awx.example.com/api/v2"
+    awx_token: "AQZjwTwWhzqewaKa7hNUu51RSaItf0"
+    vault_addr: "http://10.255.32.212:30200"
+    vault_token: "hvs.ZFnGnd3eKmSLRHvBeRx85qkE"
+    organization_id: 2
