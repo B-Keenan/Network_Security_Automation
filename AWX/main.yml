@@ -1,5 +1,5 @@
 ---
-- name: Pre gather facts Playbook
+- name: AWX Main Playbook
   hosts: localhost
   gather_facts: false
 
@@ -20,7 +20,9 @@
   vars:
     ansible_connection: local
     awx_url: "http://awx-service.awx.svc.cluster.local/api/v2"
-    awx_token: "AQZjwTwWhzqewaKa7hNUu51RSaItf0" # Move to AWX Credentials
+    awx_token: "AQZjwTwWhzqewaKa7hNUu51RSaItf0"
     vault_addr: "http://10.255.32.212:30200"
-    vault_token: "hvs.8OMSFwN7ek1SJiJ0oNIbuN1x" # Move to AWX Credentials
+    vault_token: "hvs.8OMSFwN7ek1SJiJ0oNIbuN1x"
+    vault_approle_role_id: "b7761482-1989-0bd8-c4fc-65754e1207ed"
+    vault_approle_secret_id: "06c98250-0664-5bd3-586d-4c56da06040a"
     organization_id: 2
