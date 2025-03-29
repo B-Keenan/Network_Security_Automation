@@ -16,9 +16,6 @@
   gather_facts: false
 
   roles:
-    - role: keycloak
-      tags:
-        - always
     - role: config
       tags:
         - config
@@ -30,6 +27,3 @@
     ansible_httpapi_validate_certs: false
     ansible_httpapi_port: 443
     vdom: "root"
-    keycloak_group: "fg-group"
-    client_id: "{{ client_id }}"
-    client_secret: "{{ client_secret }}"
