@@ -20,7 +20,7 @@
   vars:
     ansible_connection: local
     awx_url: "http://awx-service.awx.svc.cluster.local/api/v2"
-    awx_token: "AQZjwTwWhzqewaKa7hNUu51RSaItf0"
+    awx_token: "AQZjwTwWhzqewaKa7hNUu51RSaItf0" # Move to AWX Credentials
     vault_addr: "http://10.255.32.212:30200"
-    vault_token: "hvs.ZFnGnd3eKmSLRHvBeRx85qkE"
+    vault_token: "hvs.8OMSFwN7ek1SJiJ0oNIbuN1x" # Move to AWX Credentials
     organization_id: 2
