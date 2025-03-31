@@ -22,7 +22,7 @@
     awx_url: "http://awx-service.awx.svc.cluster.local/api/v2"
     awx_token: "AQZjwTwWhzqewaKa7hNUu51RSaItf0"
     vault_addr: "http://10.255.32.212:30200"
-    vault_token: "hvs.8OMSFwN7ek1SJiJ0oNIbuN1x"
-    vault_approle_role_id: "b7761482-1989-0bd8-c4fc-65754e1207ed"
-    vault_approle_secret_id: "06c98250-0664-5bd3-586d-4c56da06040a"
+    vault_token: "hvs.kF12bGKaScbSqmeSztGMVFur"
+    vault_approle_role_id: "8ae43b24-c4e6-a690-548a-b10cc6542250"
+    vault_approle_secret_id: "2af43c9b-8f28-60a1-49d9-9a8cc3b76021"
     organization_id: 2
