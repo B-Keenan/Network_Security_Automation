@@ -1,6 +1,6 @@
 ---
 - name: Run 'show configuration' script
-  cp_mgmt_run_script:
+  cp_mgmt_repository_script:
     script_name: 'Show Configuration'
     targets:
-      - Check-Point-AWX-FW1
+      - Check-Point-AWX-FW1	
