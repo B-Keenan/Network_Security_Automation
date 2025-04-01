@@ -1,3 +1,17 @@
 ---
-- ansible.builtin.debug:
-    msg: "This is just to trigger the EE build"
+- name: Build the custom Execution Environment
+  ansible.builtin.command:
+    cmd: "ansible-builder build -t {{ ee_image_name }}:{{ ee_image_tag }} --context {{ ee_build_context }} -v 3"
+    chdir: "{{ playbook_dir }}/../../.."  # Adjusts to the repo root
+  register: build_output
+  changed_when: build_output.rc == 0
+
+- name: Debug build output
+  ansible.builtin.debug:
+    var: build_output.stdout_lines
+  when: build_output.rc == 0
+
+- name: Fail if build fails
+  ansible.builtin.fail:
+    msg: "EE build failed: {{ build_output.stderr }}"
+  when: build_output.rc != 0
