@@ -1,0 +1,6 @@
+---
+version: 1
+dependencies:
+  galaxy: requirements.yml  # Points to your existing file
+  python:
+    - hvac  # Installs the hvac Python library
