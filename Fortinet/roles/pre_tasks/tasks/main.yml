@@ -1,0 +1,30 @@
+---
+- name: Fetch credentials from Vault for this host
+  ansible.builtin.set_fact:
+    vault_creds: "{{ lookup('hashi_vault', 'secret={{ vault_secret_path }}') }}"
+  vars:
+    vault_secret_path: "{{ awx_hosts_vendor_selection }}/{{ inventory_hostname }}"
+  when: inventory_hostname != 'localhost'
+
+- name: Set Ansible connection variables
+  ansible.builtin.set_fact:
+    ansible_user: "{{ (vault_creds.data.username if vault_creds.data is defined else vault_creds.username) | default('') }}"
+    ansible_password: "{{ (vault_creds.data.password if vault_creds.data is defined else vault_creds.password) | default('') }}"
+  when: vault_creds is defined
+
+- name: Debug connection details
+  ansible.builtin.debug:
+    msg: "Connecting to {{ inventory_hostname }} as {{ ansible_user }}"
+  when: inventory_hostname != 'localhost'
+
+- name: Get system status from Fortigate
+  fortinet.fortios.fortios_monitor_fact:
+    selectors: "system.status"
+    vdom: "{{ vdom }}"
+  register: system_status
+  when: inventory_hostname != 'localhost'
+
+- name: Display system status
+  ansible.builtin.debug:
+    var: system_status
+  when: system_status is defined

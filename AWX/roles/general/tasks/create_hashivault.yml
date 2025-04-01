@@ -1,0 +1,44 @@
+---
+- name: Check if Vault-Lookup credential exists
+  uri:
+    url: "{{ awx_url }}/credentials/?name=Vault-Lookup"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ awx_token }}"
+    return_content: yes
+  register: vault_cred_check
+
+- name: Set vault_cred_id if it exists
+  set_fact:
+    vault_cred_id: "{{ vault_cred_check.json.results[0].id }}"
+  when: vault_cred_check.json.count > 0
+
+- name: Create Vault Lookup Credential with AppRole if it doesn't exist
+  uri:
+    url: "{{ awx_url }}/credentials/"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ awx_token }}"
+      Content-Type: "application/json"
+    body_format: json
+    body: |
+      {
+        "name": "Vault-Lookup",
+        "description": "Vault secret lookup with AppRole for network creds",
+        "organization": {{ organization_id }},
+        "credential_type": 27,
+        "inputs": {
+          "url": "{{ vault_addr }}",
+          "token": "{{ vault_token }}",
+          "api_version": "v2",
+          "role_id": "{{ vault_approle_role_id }}",
+          "secret_id": "{{ vault_approle_secret_id }}"
+        }
+      }
+    status_code: 201
+  register: vault_cred_create
+  when: vault_cred_check.json.count == 0
+
+- name: Set vault_cred_id
+  set_fact:
+    vault_cred_id: "{{ (vault_cred_check.json.count > 0) | ternary(vault_cred_check.json.results[0].id, vault_cred_create.json.id) }}"
