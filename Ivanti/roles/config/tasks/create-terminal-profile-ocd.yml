@@ -1,0 +1,97 @@
+# Create a terminal service resource profile and assign to an existing User Role.
+---
+- name: Check if the resource profile exists
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ pc_name }}"
+    method: GET
+    headers:
+      Accept: "application/json"
+      Authorization: 'Basic {{ authorization }}'
+    body_format: json
+    force_basic_auth: yes
+    validate_certs: false
+    status_code: [200, 404]
+  register: profiles_response
+
+- name: Set fact for profile existence
+  ansible.builtin.set_fact:
+    profile_exists: "{{ profiles_response.status == 200 }}"
+  when: profiles_response.status is defined
+
+- name: Run Terminal Service Profile Block
+  block:
+    - name: Create Terminal Service Profile and Assign User Role
+      ansible.builtin.uri:
+        url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile"
+        method: POST
+        force_basic_auth: yes
+        headers:
+          Accept: "application/json"
+          Authorization: 'Basic {{ authorization }}'
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          name: "{{ pc_name }}" # extract value from ticket, e.g., PC000001
+          roles:
+            - "{{ username }} RDP Users" # extract value from ticket, e.g., ben
+          wts:
+            applet: "Premier Java RDP Applet"
+            host: "{{ pc_name }}.{{ domain }}" # domain, e.g., example.com
+            sessions:
+              session:
+                - alias-name: ""
+                  allow-clipboard: "false"
+                  application-path: ""
+                  apply: "all"
+                  auto-launch: "false"
+                  color-depth: "32bit"
+                  connect-comports: "false"
+                  connect-drives: "false"
+                  connect-printers: "true"
+                  connect-smartcards: "false"
+                  description: ""
+                  disable-nla: "false"
+                  experience-options:
+                    bitmap-caching: "false"
+                    desktop-background: "false"
+                    desktop-composition: "false"
+                    font-smoothing: "false"
+                    menu-window-animation: "false"
+                    show-content-dragging: "false"
+                    themes: "false"
+                  host: "{{ pc_name }}.{{ domain }}"
+                  launch-seamless: "false"
+                  microphone-option: "false"
+                  multi-mon: "true"
+                  name: "{{ pc_name }}"
+                  password-type: "variable"
+                  path-dir: ""
+                  port: "3389"
+                  roles: null
+                  screen-size: "fullscreen"
+                  smartcard-nla: "disabled"
+                  sound-options: "bring-to-local"
+                  username: "CORPORATE\\{{ username }}"
+                  variable-password: "" 
+        status_code: 201
+        validate_certs: false
+      register: create_response
+    
+    - name: Retrieve the profile details
+      ansible.builtin.uri:
+        url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ pc_name }}"
+        method: GET
+        headers:
+          Accept: "application/json"
+          Authorization: 'Basic {{ authorization }}'
+        body_format: json
+        force_basic_auth: yes
+        validate_certs: no
+    
+  when: profiles_response.status == 404
+    
+  rescue:
+    - name: Handle API errors
+      ansible.builtin.debug:
+        msg: "Failed to manage resource profile."
+      when: create_response.status != 201

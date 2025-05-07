@@ -1,14 +1,14 @@
 ---
-- name: Check all variables
-  ansible.builtin.assert:
-    that:
-      - ansible_host is defined
-
-- name: Request API key
-  shell: |
-    curl -ki -u "{{ ansible_user }}:{{ ansible_ssh_pass }}" "https://{{ ansible_host }}/api/v1/auth"
-  register: response_payload
-
-- name: Extract API key
-  set_fact:
-    api_key: "{{ (response_payload.stdout | default('')) | regex_search('\"api_key\":\"([^\"]+)\"', '\\1') }}"
+- name: Try to authenticate to legacy Pulse
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/auth"
+    method: GET
+    force_basic_auth: true
+    user: "{{ vault_username | ocd.utils.decrypt_vault }}"
+    password: "{{ vault_password | ocd.utils.decrypt_vault }}"
+    # body: "{{ provider }}"
+    body_format: json
+    return_content: true
+    validate_certs: false
+  register: auth_response_legacy
+  ignore_errors: true
