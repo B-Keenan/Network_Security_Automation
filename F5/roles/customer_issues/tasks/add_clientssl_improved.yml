@@ -1,0 +1,61 @@
+- name: Gather device info to find active F5 device
+  f5networks.f5_modules.bigip_device_info:
+    gather_subset:
+      - devices
+    partition: Common
+    provider: {{ provider }}
+  register: __f5_devices_info
+
+- name: Gather Virtual Server info
+  f5networks.f5_modules.bigip_device_info:
+    gather_subset:
+      - virtual-servers
+    partition: "Applications"
+    provider: "{{ provider }}"
+  register: __virtual_servers
+
+- name: Get profile list from Virtual Server
+  ansible.builtin.set_fact:
+    __vs_profiles: "{{ __virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | map(attribute='profiles') | first | map(attribute='full_path') | list }}"
+  when: __virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | list | length > 0
+
+- name: Get detailed profile information
+  ansible.builtin.set_fact:
+    __vs_profiles_detailed: "{{ __virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | map(attribute='profiles') | first | map(attribute='full_path') | list }}"
+  when: __virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | list | length > 0
+
+- name: Initialize converted profiles list
+  ansible.builtin.set_fact:
+    __vs_converted: []
+
+- name: Add existing profiles with context
+  ansible.builtin.set_fact:
+    __vs_converted: "{{ __vs_converted + [{'name': item, 'context': 'all'}] }}"
+  loop: "{{ __vs_profiles }}"
+  when: item != __virtual_servers_profile.name  # Exclude the new profile if already present
+
+- name: Add new clientssl profile
+  ansible.builtin.set_fact:
+    __vs_converted: "{{ __vs_converted + [__virtual_servers_profile] }}"
+
+- name: Update Virtual Server with new profile list
+  f5networks.f5_modules.bigip_virtual_server:
+    name: "{{ f5_vs }}"
+    partition: "Applications"
+    profiles: "{{ __vs_converted }}"
+    provider: "{{ provider }}"
+    state: present
+
+- name: Optional - Delete clientssl profile
+  ansible.builtin.set_fact:
+    __vs_converted: "{{ __vs_converted | rejectattr('name', 'equalto', __virtual_servers_profile.name) | list }}"
+  when: false  # Set to true if you want to delete the profile
+
+- name: Optional - Update Virtual Server with old profile list
+  f5networks.f5_modules.bigip_virtual_server:
+    name: "{{ f5_vs }}"
+    partition: "Applications"
+    profiles: "{{ __vs_converted }}"
+    provider: "{{ provider }}"
+    state: present
+  when: false  # Set to true if you want to delete the profile

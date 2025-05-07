@@ -1,0 +1,55 @@
+- f5networks.f5_modules.bigip_device_info:
+    gather_subset:
+      - devices
+    partition: Common
+    provider: {{ provider }}
+  register: __f5_devices_info
+
+- f5networks.f5_modules.bigip_device_info:
+    gather_subset:
+      - virtual-servers
+    partition: "Applications"
+    provider: "{{ provider }}"
+  register: __virtual_servers
+
+- name: Get profile list from {{ f5_vs }}
+  ansible.builtin.set_fact:
+    __vs_profiles: "{{ __virtual_servers.ansible_facts | community.general.json_query(__query_profiles) | first }}"
+  vars:
+    __query_profiles: "ansible_net_virtual_servers[?name=='{{ f5_vs }}'].profiles[*].{name: full_path, context: context}"
+
+- name: Add new client profile
+  ansible.builtin.set_fact:
+    __vs_profiles: "{{ __vs_profiles + [__virtual_servers_profile] }}"
+    __vs_converted: []
+
+- name: Convert profiles
+  ansible.builtin.include_tasks: convert_profile.yml
+  loop: "{{ __vs_profiles }}"
+  loop_control:
+    loop_var: __profile
+
+- debug:
+    var: __vs_converted
+
+- name: Update {{ f5_vs }} with new profile list
+  f5networks.f5_modules.bigip_virtual_server:
+    name: "{{ f5_vs }}"
+    partition: "Applications"
+    profiles: "{{ __vs_converted }}"
+    provider: "{{ __f5_provider }}"
+    state: present
+
+- meta: end_play
+
+- name: Delete client profile
+  ansible.builtin.set_fact:
+    __vs_profiles: "{{ __vs_profiles | difference([__virtual_servers_profile]) }}"
+
+- name: Update {{ f5_vs }} with old profile list
+  f5networks.f5_modules.bigip_virtual_server:
+    name: "{{ f5_vs }}"
+    partition: "Applications"
+    profiles: "{{ __vs_profiles }}"
+    provider: "{{ __f5_provider }}"
+    state: present
