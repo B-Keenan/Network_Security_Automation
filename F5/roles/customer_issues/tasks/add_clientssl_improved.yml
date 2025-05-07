@@ -3,7 +3,7 @@
     gather_subset:
       - devices
     partition: Common
-    provider: {{ provider }}
+    provider: "{{ provider }}"
   register: __f5_devices_info
 
 - name: Gather Virtual Server info
