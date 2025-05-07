@@ -5,7 +5,7 @@
       - task_selection is defined
 
 - name: List tasks
-  ansible.builtin.command: "ls roles/config/tasks/."
+  ansible.builtin.command: "ls roles/customer_issues/tasks/."
   changed_when: false
   register: dir_out
 
