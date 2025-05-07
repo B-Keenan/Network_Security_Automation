@@ -16,13 +16,13 @@
 
 - name: Get profile list from Virtual Server
   ansible.builtin.set_fact:
-    __vs_profiles: "{{ __virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | map(attribute='profiles') | first | map(attribute='full_path') | list }}"
+    __vs_profiles: "{{ (__virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | map(attribute='profiles') | first | map('dict2items') | list) | selectattr('key', 'equalto', 'nameReference') | map(attribute='value') | map(attribute='link') | map('regex_replace', '.*\/([^\/]+)$', '\\1') | list }}"
   when: __virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | list | length > 0
 
-- name: Get detailed profile information
-  ansible.builtin.set_fact:
-    __vs_profiles_detailed: "{{ __virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | map(attribute='profiles') | first | map(attribute='full_path') | list }}"
-  when: __virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | list | length > 0
+- name: Debug raw profiles
+  ansible.builtin.debug:
+    var: __vs_profiles
+  when: __debug
 
 - name: Initialize converted profiles list
   ansible.builtin.set_fact:
@@ -30,13 +30,19 @@
 
 - name: Add existing profiles with context
   ansible.builtin.set_fact:
-    __vs_converted: "{{ __vs_converted + [{'name': item, 'context': 'all'}] }}"
+    __vs_converted: "{{ __vs_converted + [{'name': '/Applications/' + item, 'context': 'all'}] }}"
   loop: "{{ __vs_profiles }}"
-  when: item != __virtual_servers_profile.name  # Exclude the new profile if already present
+  when: item != __virtual_servers_profile.name  # Compare profile name only
 
 - name: Add new clientssl profile
   ansible.builtin.set_fact:
     __vs_converted: "{{ __vs_converted + [__virtual_servers_profile] }}"
+  when: __vs_converted | selectattr('name', 'equalto', __virtual_servers_profile.name) | list | length == 0
+
+- name: Debug converted profiles
+  ansible.builtin.debug:
+    var: __vs_converted
+  when: __debug
 
 - name: Update Virtual Server with new profile list
   f5networks.f5_modules.bigip_virtual_server:
