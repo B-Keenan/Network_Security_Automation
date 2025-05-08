@@ -32,4 +32,7 @@
       - name: "/Applications/modern-rewrite"
       - name: "/Common/example.com-clientssl"
         context: client-side
+      - name: "/Common/rba"
+      - name: "/Common/websso"
+      - name: "/Common/ppp"
     provider: "{{ provider }}"
