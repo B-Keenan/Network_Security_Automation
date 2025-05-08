@@ -17,12 +17,18 @@
 
 - name: Initialize converted profiles list
   ansible.builtin.set_fact:
-    __vs_converted: "{{ __vs_profiles | reject('equalto', __virtual_servers_profile.name) | list }}"
+    __vs_converted: []
 
-- name: Add new clientssl profile with context
+- name: Add existing profiles with context, excluding old clientssl
+  ansible.builtin.set_fact:
+    __vs_converted: "{{ __vs_converted + [{'name': item.full_path, 'context': item.context}] }}"
+  loop: "{{ (__virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | map(attribute='profiles') | first) }}"
+  when: item.full_path != __virtual_servers_profile.name
+
+- name: Add new clientssl profile
   ansible.builtin.set_fact:
     __vs_converted: "{{ __vs_converted + [__virtual_servers_profile] }}"
-  when: __virtual_servers_profile.name not in __vs_profiles
+  when: __vs_converted | selectattr('name', 'equalto', __virtual_servers_profile.name) | list | length == 0
 
 - name: Debug converted profiles
   ansible.builtin.debug:
