@@ -1,5 +1,10 @@
 - name: Add clientssl profile to VS via tmsh
   f5networks.f5_modules.bigip_command:
     commands:
-      - "modify ltm virtual /Applications/{{ f5_vs }} profiles add { /Common/example.com-clientssl { context client-side } }"
+      - "modify ltm virtual /Applications/{{ f5_vs }} profiles add { /Common/example.com-clientssl { context clientside } }"
+    provider: "{{ provider }}"
+
+- name: Save running configuration
+  f5networks.f5_modules.bigip_config:
+    save: yes
     provider: "{{ provider }}"
