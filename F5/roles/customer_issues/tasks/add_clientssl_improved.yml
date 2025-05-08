@@ -47,11 +47,11 @@
     name: "{{ f5_vs }}"
     partition: "Applications"
     profiles:
-      - name: /Applications/applications-cp
+      - name: applications-cp
         context: client-side
-      - name: /Applications/combined-ap
+      - name: combined-ap
         context: all
-      - name: /Applications/modern-rewrite
+      - name: modern-rewrite
         context: all
       - name: /Common/clientssl
         context: client-side
