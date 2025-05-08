@@ -1,59 +1,30 @@
-- name: Gather Virtual Server info
+- name: Gather VS info
   f5networks.f5_modules.bigip_device_info:
     gather_subset:
       - virtual-servers
-    partition: "Applications"
     provider: "{{ provider }}"
-  register: __virtual_servers
+  register: vs_info
 
-- name: Get profile list from Virtual Server
-  ansible.builtin.set_fact:
-    __vs_profiles: "{{ (__virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | map(attribute='profiles') | first) | map(attribute='full_path') | list }}"
-  when: __virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | list | length > 0
-
-- name: Debug raw profiles
-  ansible.builtin.debug:
-    var: __vs_profiles
-
-- name: Initialize converted profiles list
-  ansible.builtin.set_fact:
-    __vs_converted: []
-
-- name: Add existing profiles with appropriate context handling
-  ansible.builtin.set_fact:
-    __vs_converted: >-
-      {{ __vs_converted + (
-        [{'name': item.full_path}]
-        if (item.full_path.split('/')[-1] in ['websso', 'ppp', 'rba'])
-        else [{'name': item.full_path, 'context': item.context}]
-      ) }}
-  loop: "{{ (__virtual_servers.ansible_facts.ansible_net_virtual_servers
-             | selectattr('name', 'equalto', f5_vs)
-             | map(attribute='profiles')
-             | first) }}"
-  when: item.full_path != __virtual_servers_profile.name
-
-- name: Add new clientssl profile if not present
-  ansible.builtin.set_fact:
-    __vs_converted: "{{ __vs_converted + [__virtual_servers_profile] }}"
-  when: __vs_converted | selectattr('name', 'equalto', __virtual_servers_profile.name) | list | length == 0
-
-- name: Debug converted profiles
-  ansible.builtin.debug:
-    var: __vs_converted
-
-- name: Update Virtual Server with new profile list
+- name: Delete existing Virtual Server (if needed)
   f5networks.f5_modules.bigip_virtual_server:
     name: apm_vs
     partition: Applications
+    state: absent
+    provider: "{{ provider }}"
+  when: vs_info.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', 'apm_vs') | list | length > 0
+
+- name: Recreate Virtual Server with clean profile list
+  f5networks.f5_modules.bigip_virtual_server:
+    name: apm_vs
+    partition: Applications
+    destination: "10.255.38.201:443"
+    ip_protocol: tcp
+    snat: "automap"
     profiles:
       - name: "/Common/http"
-      - name: "/Common/ppp"
-      - name: "/Common/rba"
       - name: "/Common/serverssl"
         context: server-side
       - name: "/Common/tcp"
-      - name: "/Common/websso"
       - name: "/Applications/applications-cp"
         context: client-side
       - name: "/Applications/combined-ap"
