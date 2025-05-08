@@ -45,7 +45,7 @@
 - name: Update Virtual Server with new profile list
   f5networks.f5_modules.bigip_virtual_server:
     name: test_vs
-    partition: "Applications"
+    partition: Common
     profiles:
       - name: http
       - name: serverssl
