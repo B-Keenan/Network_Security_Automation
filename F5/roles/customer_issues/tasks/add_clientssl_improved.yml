@@ -40,4 +40,3 @@
     partition: "Applications"
     profiles: "{{ __vs_converted }}"
     provider: "{{ provider }}"
-    state: present
