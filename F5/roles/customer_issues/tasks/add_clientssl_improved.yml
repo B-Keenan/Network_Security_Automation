@@ -54,8 +54,8 @@
         context: server-side
       - name: "/Common/tcp"
       - name: "/Common/websso"
-      - name: "applications-cp"
+      - name: "/Applications/applications-cp"
         context: client-side
-      - name: "combined-ap"
-      - name: "modern-rewrite"
+      - name: "/Applications/combined-ap"
+      - name: "/Applications/modern-rewrite"
     provider: "{{ provider }}"
