@@ -8,7 +8,7 @@
 
 - name: Get profile list from Virtual Server
   ansible.builtin.set_fact:
-    __vs_profiles: "{{ (__virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | map(attribute='profiles') | first) | map(attribute='nameReference.link') | map('regex_replace', '.*\/([^\/]+)$', '\\1') | list }}"
+    __vs_profiles: "{{ (__virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | map(attribute='profiles') | first) | map(attribute='full_path') | list }}"
   when: __virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | list | length > 0
 
 - name: Initialize converted profiles list
@@ -17,9 +17,9 @@
 
 - name: Add existing profiles with context
   ansible.builtin.set_fact:
-    __vs_converted: "{{ __vs_converted + [{'name': '/Applications/' + item, 'context': 'all'}] }}"
-  loop: "{{ __vs_profiles }}"
-  when: item != __virtual_servers_profile.name  # Compare profile name only
+    __vs_converted: "{{ __vs_converted + [{'name': item.full_path, 'context': item.context}] }}"
+  loop: "{{ (__virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | map(attribute='profiles') | first) }}"
+  when: item.full_path != __virtual_servers_profile.name
 
 - name: Add new clientssl profile
   ansible.builtin.set_fact:
@@ -33,17 +33,3 @@
     profiles: "{{ __vs_converted }}"
     provider: "{{ provider }}"
     state: present
-
-- name: Optional - Delete clientssl profile
-  ansible.builtin.set_fact:
-    __vs_converted: "{{ __vs_converted | rejectattr('name', 'equalto', __virtual_servers_profile.name) | list }}"
-  when: false  # Set to true if you want to delete the profile
-
-- name: Optional - Update Virtual Server with old profile list
-  f5networks.f5_modules.bigip_virtual_server:
-    name: "{{ f5_vs }}"
-    partition: "Applications"
-    profiles: "{{ __vs_converted }}"
-    provider: "{{ provider }}"
-    state: present
-  when: false  # Set to true if you want to delete the profile
