@@ -48,9 +48,14 @@
     partition: Applications
     profiles:
       - name: "/Common/http"
+      - name: "/Common/ppp"
+      - name: "/Common/rba"
       - name: "/Common/serverssl"
         context: server-side
       - name: "/Common/tcp"
-      - name: "/Common/example.com-clientssl"
+      - name: "/Common/websso"
+      - name: "applications-cp"
         context: client-side
+      - name: "combined-ap"
+      - name: "modern-rewrite"
     provider: "{{ provider }}"
