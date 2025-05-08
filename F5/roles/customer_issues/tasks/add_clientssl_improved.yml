@@ -58,4 +58,6 @@
         context: client-side
       - name: "/Applications/combined-ap"
       - name: "/Applications/modern-rewrite"
+      - name: "/Common/example.com-clientssl"
+        context: client-side
     provider: "{{ provider }}"
