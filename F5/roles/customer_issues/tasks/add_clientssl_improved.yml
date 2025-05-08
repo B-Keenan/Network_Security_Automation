@@ -47,12 +47,12 @@
     name: "{{ f5_vs }}"
     partition: "Applications"
     profiles:
-      - name: /Common/http
+      - name: http
         context: all
-      - name: /Common/serverssl
+      - name: serverssl
         context: server-side
-      - name: /Common/tcp
+      - name: tcp
         context: all
-      - name: /Common/example.com-clientssl
+      - name: example.com-clientssl
         context: client-side
     provider: "{{ provider }}"
