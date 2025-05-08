@@ -48,11 +48,9 @@
     partition: "Applications"
     profiles:
       - name: http
-        context: all
       - name: serverssl
         context: server-side
       - name: tcp
-        context: all
       - name: example.com-clientssl
         context: client-side
     provider: "{{ provider }}"
