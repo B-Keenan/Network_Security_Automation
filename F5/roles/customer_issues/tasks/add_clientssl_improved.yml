@@ -46,5 +46,27 @@
   f5networks.f5_modules.bigip_virtual_server:
     name: "{{ f5_vs }}"
     partition: "Applications"
-    profiles: "{{ __vs_converted }}"
+    profiles:
+      - name: /Applications/applications-cp
+        context: client-side
+      - name: /Applications/combined-ap
+        context: all
+      - name: /Applications/modern-rewrite
+        context: all
+      - name: /Common/clientssl
+        context: client-side
+      - name: /Common/http
+        context: all
+      - name: /Common/ppp
+        context: all
+      - name: /Common/rba
+        context: all
+      - name: /Common/serverssl
+        context: server-side
+      - name: /Common/tcp
+        context: all
+      - name: /Common/websso
+        context: all
+      - name: /Common/example.com-clientssl
+        context: client-side
     provider: "{{ provider }}"
