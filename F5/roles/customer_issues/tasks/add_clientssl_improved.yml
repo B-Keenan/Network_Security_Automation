@@ -47,23 +47,17 @@
     name: apm_vs
     partition: Applications
     profiles:
-      - name: "applications-cp"
+      - name: applications-cp
         context: client-side
-      - name: "combined-ap"
+      - name: combined-ap
         context: all
-      - name: "modern-rewrite"
+      - name: modern-rewrite
         context: all
       - name: "/Common/http"
-        context: all
-      - name: "/Common/ppp"
-        context: all
-      - name: "/Common/rba"
         context: all
       - name: "/Common/serverssl"
         context: server-side
       - name: "/Common/tcp"
-        context: all
-      - name: "/Common/websso"
         context: all
       - name: "/Common/example.com-clientssl"
         context: client-side
