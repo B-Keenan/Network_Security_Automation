@@ -19,13 +19,21 @@
   ansible.builtin.set_fact:
     __vs_converted: []
 
-- name: Add existing profiles with context, excluding old clientssl
+- name: Add existing profiles with appropriate context handling
   ansible.builtin.set_fact:
-    __vs_converted: "{{ __vs_converted + [{'name': item.full_path, 'context': item.context}] }}"
-  loop: "{{ (__virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | map(attribute='profiles') | first) }}"
+    __vs_converted: >-
+      {{ __vs_converted + (
+        [{'name': item.full_path}]
+        if (item.full_path.split('/')[-1] in ['websso', 'ppp', 'rba'])
+        else [{'name': item.full_path, 'context': item.context}]
+      ) }}
+  loop: "{{ (__virtual_servers.ansible_facts.ansible_net_virtual_servers
+             | selectattr('name', 'equalto', f5_vs)
+             | map(attribute='profiles')
+             | first) }}"
   when: item.full_path != __virtual_servers_profile.name
 
-- name: Add new clientssl profile
+- name: Add new clientssl profile if not present
   ansible.builtin.set_fact:
     __vs_converted: "{{ __vs_converted + [__virtual_servers_profile] }}"
   when: __vs_converted | selectattr('name', 'equalto', __virtual_servers_profile.name) | list | length == 0
