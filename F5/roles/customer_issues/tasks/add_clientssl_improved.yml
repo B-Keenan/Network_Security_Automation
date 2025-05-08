@@ -6,33 +6,49 @@
     provider: "{{ provider }}"
   register: vs_info
 
-- name: Delete existing Virtual Server (if needed)
+- name: Set VS config fact
+  ansible.builtin.set_fact:
+    __vs_config: >-
+      {{
+        (vs_info.ansible_facts.ansible_net_virtual_servers
+        | selectattr('name', 'equalto', 'apm_vs')
+        | first)
+      }}
+  when: vs_info.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', "{{ f5_vs }}") | list | length > 0
+
+- name: Build profiles list with context (default 'all')
+  ansible.builtin.set_fact:
+    __vs_profiles_converted: >-
+      {{
+        __vs_config.profiles
+        | map('combine', {'context': 'all'})
+        | map('combine', {'name': item.full_path}, recursive=True)
+        | list
+      }}
+  loop: "{{ __vs_config.profiles }}"
+  loop_control:
+    loop_var: item
+
+- name: Delete existing Virtual Server
   f5networks.f5_modules.bigip_virtual_server:
-    name: apm_vs
-    partition: Applications
+    name: "{{ __vs_config.name }}"
+    partition: "{{ __vs_config.partition }}"
     state: absent
     provider: "{{ provider }}"
-  when: vs_info.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', 'apm_vs') | list | length > 0
 
-- name: Recreate Virtual Server with clean profile list
+- name: Recreate Virtual Server with gathered config
   f5networks.f5_modules.bigip_virtual_server:
-    name: apm_vs
-    partition: Applications
-    destination: "10.255.38.201:443"
-    ip_protocol: tcp
-    snat: "automap"
-    profiles:
-      - name: "/Common/http"
-      - name: "/Common/serverssl"
-        context: server-side
-      - name: "/Common/tcp"
-      - name: "/Applications/applications-cp"
-        context: client-side
-      - name: "/Applications/combined-ap"
-      - name: "/Applications/modern-rewrite"
-      - name: "/Common/example.com-clientssl"
-        context: client-side
-      - name: "/Common/rba"
-      - name: "/Common/websso"
-      - name: "/Common/ppp"
+    name: "{{ __vs_config.name }}"
+    partition: "{{ __vs_config.partition }}"
+    destination: "{{ __vs_config.destination }}"
+    ip_protocol: "{{ __vs_config.ip_protocol }}"
+    source: "{{ __vs_config.source }}"
+    source_address_translation:
+      type: "{{ __vs_config.source_address_translation.type }}"
+      pool: "{{ __vs_config.source_address_translation.pool | default(omit) }}"
+    profiles: "{{ __vs_profiles_converted }}"
+    fallback_persistence_profile: "{{ __vs_config.fallback_persistence_profile | default(omit) }}"
+    persist_profiles: "{{ __vs_config.persist | default(omit) }}"
+    vlans_enabled: "{{ __vs_config.vlans_enabled }}"
+    vlans: "{{ __vs_config.vlans }}"
     provider: "{{ provider }}"
