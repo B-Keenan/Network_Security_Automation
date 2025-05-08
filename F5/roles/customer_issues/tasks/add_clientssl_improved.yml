@@ -11,20 +11,22 @@
     __vs_profiles: "{{ (__virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | map(attribute='profiles') | first) | map(attribute='full_path') | list }}"
   when: __virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | list | length > 0
 
+- name: Debug raw profiles
+  ansible.builtin.debug:
+    var: __vs_profiles
+
 - name: Initialize converted profiles list
   ansible.builtin.set_fact:
-    __vs_converted: []
+    __vs_converted: "{{ __vs_profiles | reject('equalto', __virtual_servers_profile.name) | list }}"
 
-- name: Add existing profiles with context
-  ansible.builtin.set_fact:
-    __vs_converted: "{{ __vs_converted + [{'name': item.full_path, 'context': item.context}] }}"
-  loop: "{{ (__virtual_servers.ansible_facts.ansible_net_virtual_servers | selectattr('name', 'equalto', f5_vs) | map(attribute='profiles') | first) }}"
-  when: item.full_path != __virtual_servers_profile.name
-
-- name: Add new clientssl profile
+- name: Add new clientssl profile with context
   ansible.builtin.set_fact:
     __vs_converted: "{{ __vs_converted + [__virtual_servers_profile] }}"
-  when: __vs_converted | selectattr('name', 'equalto', __virtual_servers_profile.name) | list | length == 0
+  when: __virtual_servers_profile.name not in __vs_profiles
+
+- name: Debug converted profiles
+  ansible.builtin.debug:
+    var: __vs_converted
 
 - name: Update Virtual Server with new profile list
   f5networks.f5_modules.bigip_virtual_server:
