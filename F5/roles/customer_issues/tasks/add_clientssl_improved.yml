@@ -44,7 +44,7 @@
 
 - name: Update Virtual Server with new profile list
   f5networks.f5_modules.bigip_virtual_server:
-    name: "{{ f5_vs }}"
+    name: apm_vs
     partition: "Applications"
     profiles:
       - name: applications-cp
