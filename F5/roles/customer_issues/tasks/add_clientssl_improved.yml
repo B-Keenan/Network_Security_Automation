@@ -1,5 +1,6 @@
 - name: Gather VS info
   f5networks.f5_modules.bigip_device_info:
+    partition: Applications
     gather_subset:
       - virtual-servers
     provider: "{{ provider }}"
