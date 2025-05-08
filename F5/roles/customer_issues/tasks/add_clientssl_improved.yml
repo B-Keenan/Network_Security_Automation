@@ -47,10 +47,10 @@
     name: test_vs
     partition: Applications
     profiles:
-      - name: http
-      - name: serverssl
+      - name: "/Common/http"
+      - name: "/Common/serverssl"
         context: server-side
-      - name: tcp
-      - name: example.com-clientssl
+      - name: "/Common/tcp"
+      - name: "/Common/example.com-clientssl"
         context: client-side
     provider: "{{ provider }}"
