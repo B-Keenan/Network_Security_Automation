@@ -45,7 +45,7 @@
 - name: Update Virtual Server with new profile list
   f5networks.f5_modules.bigip_virtual_server:
     name: apm_vs
-    partition: "Applications"
+    partition: Applications
     profiles:
       - name: applications-cp
         context: client-side
@@ -53,20 +53,18 @@
         context: all
       - name: modern-rewrite
         context: all
-      - name: /Common/clientssl
+      - name: /Common/example.com-clientssl
         context: client-side
       - name: /Common/http
         context: all
-      - name: /Common/ppp
+      - name: ppp
         context: all
-      - name: /Common/rba
+      - name: rba
         context: all
       - name: /Common/serverssl
         context: server-side
       - name: /Common/tcp
         context: all
-      - name: /Common/websso
+      - name: websso
         context: all
-      - name: /Common/example.com-clientssl
-        context: client-side
     provider: "{{ provider }}"
