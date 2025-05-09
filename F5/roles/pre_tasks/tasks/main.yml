@@ -4,21 +4,37 @@
     that:
       - ansible_host is defined
 
-- name: Gather device facts
-  block:
-    - name: Set provider
-      ansible.builtin.set_fact:
-        provider:
-          password: "{{ ansible_ssh_pass }}"
-          server: "{{ ansible_host }}"
-          user: "{{ ansible_user }}"
-          validate_certs: false
-          no_f5_teem: true
+- name: Fetch credentials from Vault for this host
+  ansible.builtin.set_fact:
+    vault_creds: "{{ lookup('hashi_vault', 'secret={{ vault_secret_path }}') }}"
+  vars:
+    vault_secret_path: "{{ awx_hosts_vendor_selection }}/{{ inventory_hostname }}"
+  when: inventory_hostname != 'localhost'
 
-    - name: Gather Device Facts
-      f5networks.f5_modules.bigip_device_info:
-        provider: "{{ provider }}"
-        gather_subset:
-          - system-info
-          - software-hotfixes
-      register: device_facts
+- name: Set Ansible connection variables
+  ansible.builtin.set_fact:
+    ansible_user: "{{ (vault_creds.data.username if vault_creds.data is defined else vault_creds.username) | default('') }}"
+    ansible_password: "{{ (vault_creds.data.password if vault_creds.data is defined else vault_creds.password) | default('') }}"
+  when: vault_creds is defined
+
+- name: Debug connection details
+  ansible.builtin.debug:
+    msg: "Connecting to {{ inventory_hostname }} as {{ ansible_user }}"
+  when: inventory_hostname != 'localhost'
+
+- name: Set provider
+  ansible.builtin.set_fact:
+    provider:
+      password: "{{ ansible_password }}"
+      server: "{{ ansible_host }}"
+      user: "{{ ansible_user }}"
+      validate_certs: false
+      no_f5_teem: true
+
+- name: Gather Device Facts
+  f5networks.f5_modules.bigip_device_info:
+    provider: "{{ provider }}"
+    gather_subset:
+      - system-info
+      - software-hotfixes
+  register: device_facts
