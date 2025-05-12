@@ -1,6 +1,19 @@
 ---
-version: 1
+version: 3
+
+images:
+  base_image:
+      name: quay.io/ansible/awx-ee:latest
+
 dependencies:
-  galaxy: requirements.yml  # Points to your existing file
-  python:
-    - hvac  # Installs the hvac Python library
+  galaxy: requirements.yml
+  python: requirements.txt
+  system: bindep.txt
+  ansible_core:
+    package_pip: ansible-core
+  ansible_runner:
+    package_pip: ansible-runner
+
+additional_build_steps:
+  prepend_final:
+    - RUN python3 -m pip install --upgrade pip
