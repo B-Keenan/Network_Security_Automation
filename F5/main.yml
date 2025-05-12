@@ -25,9 +25,6 @@
     - role: qkview
       tags:
         - qkview
-    - role: customer_issues
-      tags:
-        - customer
   
   vars:
     ansible_port: 443

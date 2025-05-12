@@ -4,4 +4,3 @@ paramiko
 netaddr
 ncclient
 xmltodict
-f5-sdk
