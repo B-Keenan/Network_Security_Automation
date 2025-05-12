@@ -9,6 +9,7 @@
     vault_creds: "{{ lookup('hashi_vault', 'secret={{ vault_secret_path }}') }}"
   vars:
     vault_secret_path: "{{ awx_hosts_vendor_selection }}/{{ inventory_hostname }}"
+    vault_addr: "http://10.255.32.212:30200"
   when: inventory_hostname != 'localhost'
 
 - name: Set Ansible connection variables
