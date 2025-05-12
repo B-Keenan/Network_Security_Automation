@@ -6,7 +6,7 @@
 
 - name: Fetch credentials from Vault for this host
   ansible.builtin.set_fact:
-    vault_creds: "{{ lookup('hashi_vault', 'secret=' + vault_secret_path, url=vault_addr) }}"
+    vault_creds: "{{ lookup('hashi_vault', 'secret=' + vault_secret_path, url='http://10.255.32.212:30200') }}"
   vars:
     vault_secret_path: "{{ awx_hosts_vendor_selection }}/{{ inventory_hostname }}"
   when: inventory_hostname != 'localhost'
