@@ -33,9 +33,3 @@
     ansible_port: 443
     ansible_connection: local
     validate_certs: false
-
-    # Customers variable:
-    __virtual_servers_profile:
-      name: "/Common/example.com-clientssl"
-      context: client-side
-    f5_vs: "apm_vs"
