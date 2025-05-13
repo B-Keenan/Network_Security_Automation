@@ -5,9 +5,9 @@
       - ansible_host is defined
 
 - debug:
-    var: vault_token
+    var: VAULT_TOKEN
 - debug:
-    var: vault_addr
+    var: VAULT_ADDR
 
 - name: Fetch credentials from Vault for this host
   ansible.builtin.set_fact:
