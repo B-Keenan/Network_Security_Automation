@@ -4,6 +4,11 @@
     that:
       - ansible_host is defined
 
+- debug:
+    var: vault_token
+- debug:
+    var: vault_addr
+
 - name: Fetch credentials from Vault for this host
   ansible.builtin.set_fact:
     vault_creds: "{{ lookup('community.hashi_vault.hashi_vault', 'secret/data/' + vault_secret_path, url='http://10.255.32.212:30200', token='hvs.kF12bGKaScbSqmeSztGMVFur') }}"
