@@ -6,9 +6,9 @@
 
 - name: Fetch credentials from Vault for this host
   ansible.builtin.set_fact:
-    vault_creds: "{{ lookup('community.hashi_vault.hashi_vault', 'bigip/data/bigipl7.example.com', url='http://10.255.32.212:30200', token='hvs.kF12bGKaScbSqmeSztGMVFur', kv_version=2) }}"
+    vault_creds: "{{ lookup('community.hashi_vault.hashi_vault', vault_secret_path, url='http://10.255.32.212:30200', token='hvs.kF12bGKaScbSqmeSztGMVFur') }}"
   vars:
-    vault_secret_path: "{{ (group_names | intersect(awx_hosts_vendor_selection)) | first }}/{{ inventory_hostname }}"
+    vault_secret_path: "{{ (group_names | intersect(awx_hosts_vendor_selection)) | first }}/data/{{ inventory_hostname }}"
   when: inventory_hostname != 'localhost'
 
 - name: Set Ansible connection variables
@@ -16,11 +16,6 @@
     ansible_user: "{{ (vault_creds.data.username if vault_creds.data is defined else vault_creds.username) | default('') }}"
     ansible_password: "{{ (vault_creds.data.password if vault_creds.data is defined else vault_creds.password) | default('') }}"
   when: vault_creds is defined
-
-- name: Debug connection details
-  ansible.builtin.debug:
-    msg: "Connecting to {{ inventory_hostname }} as {{ ansible_user }}"
-  when: inventory_hostname != 'localhost'
 
 - name: Set provider
   ansible.builtin.set_fact:
