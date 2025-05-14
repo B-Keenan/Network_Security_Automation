@@ -1,0 +1,9 @@
+---
+- name: Run awx-manage export command
+  command: >
+    awx-manage export --destination /var/lib/awx/backup/awx-backup-{{ ansible_date_time.iso8601 }}.json
+  become: yes
+
+- name: List backup files
+  command: ls -lh /var/lib/awx/backup/
+  register: backup_files
