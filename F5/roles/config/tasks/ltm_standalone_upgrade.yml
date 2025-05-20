@@ -189,17 +189,7 @@
         loop_control:
           label: "{{ item.key }}"
       
-  - name: Backup new version configuration
-    f5networks.f5_modules.bigip_ucs_fetch:
-      async_timeout: 1800
-      src: "{{ inventory_hostname + '-' + date.stdout +  '-post-upgrade-backup.ucs' }}"
-      dest: "{{ '/opt/ansible/backups/' + inventory_hostname + '-' + date.stdout +  '-post-upgrade-backup.ucs' }}"
-      provider: "{{ provider }}"
-
-  - name: Remove UCS on F5
-    f5networks.f5_modules.bigip_ucs:
-      ucs: "{{ inventory_hostname + '-' + date.stdout +  '-post-upgrade-backup.ucs' }}"
-      state: absent
-      provider: "{{ provider }}"
+  - name: Post-upgrade UCS
+    ansible.builtin.include_tasks: create_ucs.yml
           
   when: "'Active' in failover_state.stdout"
