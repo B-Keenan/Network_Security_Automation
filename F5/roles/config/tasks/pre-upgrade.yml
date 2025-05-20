@@ -4,12 +4,48 @@
   run_once: true
   block:
     - name: Register Partitions
-      shell: tmsh list auth partition | grep "auth partition" | awk '{print $3}'
+      shell: tmsh list auth partition | awk '/auth partition/ {print $3}'
       register: partitions
 
-    - name: Register current boot volume name
-      shell: tmsh show sys software status | grep yes | grep -v no | awk '{print $1}'
-      register: cur_vol
+    - name: Get available volume number to use
+      shell: tmsh show sys software status | awk '$5 == "no" {print $1}' | head -1
+      register: inactive_volumes
+
+    - name: Get list of existing volume numbers
+      shell: tmsh show sys software status | awk '/^HD|^MD/ {print $1}'
+      register: existing_volumes
+
+    - name: Determine next available volume
+      set_fact:
+        next_volume: >-
+          {{
+            (
+              existing_vols.stdout_lines
+              | select('match', '^(HD|MD)1\\.\\d+$')
+              | map('regex_replace', '^(HD|MD)1\\.', '')
+              | map('int')
+              | max + 1
+            ) | string
+          }}
+      when: inactive_volumes.stdout == ""
+
+    - name: Determine most common volume prefix if none available
+      set_fact:
+        most_common_prefix: >-
+          {{
+            (
+              existing_volumes.stdout_lines
+              | select('match', '^(HD|MD)1\\.\\d+$')
+              | map('regex_search', '^(HD|MD)')
+              | list
+              | unique
+            )[0] if (existing_volumes.stdout_lines | select('match', '^(HD|MD)1\\.\\d+$') | list | length > 0)
+          }}
+      when: inactive_volumes.stdout == ""
+
+    - name: Set target volume
+      set_fact:
+        target_volume: "{{ vol.stdout if vol.stdout else most_common_prefix + '1.' + next_volume }}"
 
     - name: Register date on BIG-IP
       command: date "+%F"
