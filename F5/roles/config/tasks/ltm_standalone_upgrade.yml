@@ -1,12 +1,13 @@
 # Upgrade will be performed on a single host.
 # Not for DNS or vCMP configurations.
 #
-# AWX extra variables: upgrade_iso
+# AWX extra variables examples:
+# upgrade_iso, e.g., BIGIP-17.1.2.2-0.0.12.iso
 ---
 - name: Start F5 BIG-IP TMOS Software Upgrade
   block:
-  - name: Perform pre-upgrade tasks
-    ansible.builtin.include_tasks: pre-upgrade.yml
+  - name: Perform pre-upgrade shell tasks
+    ansible.builtin.include_tasks: pre_upgrade_shell.yml
 
   - name: Save running configuration
     f5networks.f5_modules.bigip_config:
@@ -58,7 +59,7 @@
         {{ (existing_volumes
               | map('regex_search', '^(HD|MD)')
               | list
-              | unique)[0] if (existing_volumes | length > 0) else 'HD' }}
+              | unique)[0] if (existing_volumes | length > 0) }}
     when: inactive_volume is none
 
   - name: Determine next available volume number
@@ -79,7 +80,7 @@
 
   - name: Reactivate license
     f5networks.f5_modules.bigip_device_license:
-      license_key: "{{ license_subset.registration_key }}"
+      license_key: "{{ device_info.registration_key }}"
       provider: "{{ provider }}"
 
   - name: Wait for device to return to Active
@@ -88,28 +89,15 @@
       search_regex: Active
     delegate_to: "{{ inventory_hostname }}"
 
-  - name: Save running configuration
-    f5networks.f5_modules.bigip_config:
-      save: yes
-      provider: "{{ provider }}"
+  - name: Pre-upgrade UCS
+    ansible.builtin.include_tasks: create_ucs.yml
   
-  - name: Download UCS
-    f5networks.f5_modules.bigip_ucs_fetch:
-      async_timeout: 1800
-      src: "pre-upgrade-{{ inventory_hostname }}-{{ date.stdout }}.ucs"
-      dst: "/var/tmp"
-      provider: "{{ provider }}"
-    
-  - name: Remove UCS on the F5
-    f5networks.f5_modules.bigip_ucs:
-      ucs: "pre-upgrade-{{ inventory_hostname }}-{{ date.stdout }}.ucs"
-      state: absent
-      provider: "{{ provider }}"
-  
-  - name: Upload upgrade image
-    f5networks.f5_modules.bigip_software_image:
-      image: "{{ '/tmp/' + upgrade_iso }}"
-      provider: "{{ provider }}"
+  # Temporary
+  - name: Upload upgrade image to device
+    ansible.posix.synchronize:
+      src: "benk@10.255.32.210:/var/tmp/{{ upgrade_iso }}"
+      dest: "/shared/images/"
+    delegate_to: "{{ inventory_hostname }}"
   
   - name: Wait for image to become available
     wait_for:
@@ -121,14 +109,14 @@
       state: activated
       volume: "{{ target_volume.stdout }}"
       provider: "{{ provider }}"
-  
+
   - name: Wait for device to return to Active
     wait_for:
       path: /var/prompt/ps1
       search_regex: Active
     delegate_to: "{{ inventory_hostname }}"
 
-  - name: Allow some time for health monitoring to finish
+  - name: Allow some time for services to start
     ansible.builtin.pause:
       seconds: 300
 

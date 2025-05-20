@@ -1,0 +1,26 @@
+---
+- name: Save running configuration
+  f5networks.f5_modules.bigip_config:
+    save: yes
+    provider: "{{ provider }}"
+
+- name: Create UCS on the BIG-IP
+  f5networks.f5_modules.bigip_ucs_fetch:
+    async_timeout: 1800
+    src: "{{ inventory_hostname }}-{{ date.stdout }}.ucs"
+    only_create_file: true
+    fail_on_missing: true
+    provider: "{{ provider }}"
+
+# Using Synchronize to avoid copying files to container + BIG-IP's have rsync pre-installed.
+- name: Copy UCS to remote server from the F5
+  ansible.posix.synchronize:
+    src: "/var/local/ucs/{{ inventory_hostname }}-{{ date.stdout }}.ucs"
+    dest: "benk@10.255.32.210:/var/tmp/"
+  delegate_to: "{{ inventory_hostname }}"
+  
+- name: Remove UCS on the F5
+  f5networks.f5_modules.bigip_ucs:
+    ucs: "{{ inventory_hostname }}-{{ date.stdout }}.ucs"
+    state: absent
+    provider: "{{ provider }}"
