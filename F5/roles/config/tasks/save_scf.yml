@@ -1,0 +1,5 @@
+---
+- name: Save an unencrypted SCF
+  f5networks.f5_modules.bigip_command:
+    commands: save sys config file {{ inventory_hostname }} no-passphrase
+    provider: "{{ provider }}"
