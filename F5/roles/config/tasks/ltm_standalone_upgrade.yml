@@ -1,14 +1,14 @@
 # Upgrade will be performed on a single host.
 # Not for DNS or vCMP configurations.
 #
-# AWX extra variables examples:
-# upgrade_iso, e.g., BIGIP-17.1.2.2-0.0.12.iso
+# AWX extra variables example usage:
+# upgrade_iso = "BIGIP-17.1.2.2-0.0.12.iso"
 ---
+- name: Perform pre-upgrade shell tasks
+  ansible.builtin.include_tasks: pre_upgrade_shell.yml
+
 - name: Start F5 BIG-IP TMOS Software Upgrade
   block:
-  - name: Perform pre-upgrade shell tasks
-    ansible.builtin.include_tasks: pre_upgrade_shell.yml
-
   - name: Save running configuration
     f5networks.f5_modules.bigip_config:
       save: yes

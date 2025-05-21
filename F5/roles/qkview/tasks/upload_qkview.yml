@@ -1,0 +1,20 @@
+---
+# Upload qkview from the F5 device.
+#
+# Extra vars:
+# ihealth_client_id, ihealth_client_secret, tmp_path
+# 
+- name: Upload qkview to ihealth
+  ansible.builtin.shell: |
+    curl --request POST --url https://ihealth2-api.f5.com/qkview-analyzer/api/qkviews?visible_in_gui=true -H "Authorization: Bearer "{{ workflow_artifacts.bearer_token.access_token }}"" -H "Accept: application/vnd.f5.ihealth.api" --user-agent "AnsibleClient" -o - -F qkview=@""{{ tmp_path + inventory_hostname + '.qkview' }}""
+  register: upload_response
+  delegate_to: "{{ inventory_hostname }}"
+
+- ansible.builtin.set_stats:
+    data:
+      qkview_id: "{{ upload_response.stdout | regex_search('<id>([0-9]+)</id>', '\\1') }}"
+    per_host: yes
+
+# Wait for qkview to be analyzed.
+- ansible.builtin.pause:
+    minutes: 5

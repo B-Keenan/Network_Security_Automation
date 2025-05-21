@@ -1,0 +1,10 @@
+---
+- name: Generate API access token
+  ansible.builtin.shell: |
+    curl --request POST --url https://identity.account.f5.com/oauth2/"{{ ihealth_client_id }}"/v1/token -H "accept: application/json" -H "authorization: Basic "{{ ihealth_client_secret }}"" -H "cache-control: no-cache" -H "content-type: application/x-www-form-urlencoded" --data "grant_type=client_credentials&scope=ihealth"
+  register: auth_response
+  delegate_to: "{{ inventory_hostname }}"
+
+- ansible.builtin.set_stats:
+    data:
+      bearer_token: "{{ auth_response.stdout }}"
