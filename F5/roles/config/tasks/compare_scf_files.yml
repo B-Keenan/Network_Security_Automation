@@ -8,8 +8,13 @@
 - name: Compare SCF files using shell diff
   ansible.builtin.shell: diff -y --suppress-common-lines /var/local/scf/{{ inventory_hostname }}_{{ ansible_date_time.date }}.scf /var/local/scf/{{ inventory_hostname }}.scf
   register: diff_output
-  ignore_errors: true
+  delegate_to: "{{ inventory_hostname }}"
 
 - name: Show diff results
   debug:
     msg: "{{ diff_output.stdout }}"
+
+- name: Delete the SCF file
+  f5networks.f5_modules.bigip_command:
+  commands: delete sys config file {{ inventory_hostname }}_{{ ansible_date_time.date }}
+  provider: "{{ provider }}"
