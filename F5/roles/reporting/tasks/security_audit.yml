@@ -1,0 +1,17 @@
+---
+- name: Gather subsets
+  f5networks.f5_modules.bigip_device_info:
+    partition: "{{ item }}"
+    gather_subset:
+      - client-ssl-profiles
+    provider: "{{ provider }}"
+  loop: "{{ partitions.stdout_lines }}"
+  register: device_info
+
+- name: Assert no weak ciphers are configured
+  assert:
+    that:
+      - device_info['device_info']['items'] is defined
+      - device_info['device_info']['items'] | selectattr('ciphers', 'search', 'TLSv1') | list | length == 0
+      - device_info['device_info']['items'] | selectattr('ciphers', 'search', 'RC4') | list | length == 0
+    fail_msg: "Weak ciphers or protocols detected in SSL profiles!"

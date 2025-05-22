@@ -1,0 +1,10 @@
+---
+- name: Delete SCF
+  f5networks.f5_modules.bigip_command:
+    commands: delete sys config file {{ inventory_hostname }}_baseline
+    provider: "{{ provider }}"
+
+- name: Create a new unencrypted SCF
+  f5networks.f5_modules.bigip_command:
+    commands: save sys config file {{ inventory_hostname }}_baseline no-passphrase
+    provider: "{{ provider }}"
