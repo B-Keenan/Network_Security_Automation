@@ -1,4 +1,9 @@
 ---
+- name: Register Partitions
+  shell: tmsh list auth partition | awk '/auth partition/ {print $3}'
+  register: partitions
+  delegate_to: "{{ inventory_hostname }}"
+
 - name: Gather subsets
   f5networks.f5_modules.bigip_device_info:
     partition: "{{ item }}"
@@ -33,7 +38,6 @@
   template:
     src: health_check_report.j2
     dest: "/tmp/bigip_status_report_{{ inventory_hostname }}.txt"
-  register: report_render
 
 # Or import upload_to_s3.yml.
 - name: Read rendered report content
