@@ -25,6 +25,9 @@
     - role: qkview
       tags:
         - qkview
+    - role: reporting
+      tags:
+        - reporting
   
   vars:
     ansible_port: 443
