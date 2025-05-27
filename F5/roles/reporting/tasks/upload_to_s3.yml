@@ -1,0 +1,9 @@
+---
+- name: Upload BIG-IP status report to S3
+  amazon.aws.s3_object:
+    bucket: "{{ s3_bucket }}"
+    object: "{{ s3_object_prefix }}/bigip_status_report_{{ inventory_hostname }}_{{ ansible_date_time.date }}.txt"
+    src: "/tmp/bigip_status_report_{{ inventory_hostname }}.txt"
+    mode: put
+    region: "{{ s3_region }}"
+  delegate_to: localhost

@@ -1,0 +1,36 @@
+BIG-IP Status Report for {{ inventory_hostname }}
+==================================================
+
+Date: {{ ansible_date_time.iso8601 }}
+
+Virtual Servers
+---------------
+{% for vs, status in collect_stats.virtual_servers.items() %}
+- {{ vs }} : {{ status }}
+{% else %}
+(No virtual servers found)
+{% endfor %}
+
+Pools
+-----
+{% for pool, status in collect_stats.ltm_pools.items() %}
+- {{ pool }} : {{ status }}
+{% else %}
+(No pools found)
+{% endfor %}
+
+SSL Certificates
+----------------
+{% for cert, expiry in collect_stats.ssl_certs.items() %}
+- {{ cert }} : Expires on {{ expiry }}
+{% else %}
+(No certificates found)
+{% endfor %}
+
+License Information
+-------------------
+- Max Permitted Version: {{ collect_stats.license_info.max_version }}
+- License Expiry Date  : {{ collect_stats.license_info.expiry }}
+
+==================================================
+
