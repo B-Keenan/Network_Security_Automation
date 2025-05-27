@@ -1,8 +1,9 @@
 ---
-- name: Register Partitions
+- name: Register partitions
   shell: tmsh list auth partition | awk '/auth partition/ {print $3}'
+  vars:
+    ansible_connection: ssh
   register: partitions
-  delegate_to: "{{ inventory_hostname }}"
 
 - name: Gather subsets
   f5networks.f5_modules.bigip_device_info:

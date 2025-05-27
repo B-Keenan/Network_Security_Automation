@@ -1,6 +1,6 @@
 ---
 - name: Gather pre-upgrade facts
-  delegate_to: "{{ inventory_hostname }}"
+  ansible_connection: ssh
   run_once: true
   block:
     - name: Register Partitions
