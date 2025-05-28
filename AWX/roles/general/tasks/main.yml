@@ -4,7 +4,7 @@
       - task_selection is defined
 
 - name: Include selected task files in order
-  ansible.builtin.include_tasks: "roles/general/tasks/{{ task_file }}"
+  ansible.builtin.include_tasks: "roles/general/tasks/{{ task_file }}.yml"
   loop: "{{ task_selection }}"
   loop_control:
     loop_var: task_file
