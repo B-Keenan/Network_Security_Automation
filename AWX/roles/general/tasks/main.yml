@@ -3,21 +3,8 @@
     that:
       - task_selection is defined
 
-- name: Convert task_selection to list
-  ansible.builtin.set_fact:
-    task_selection_list: "{{ task_selection.split(',') }}"
-
-- name: Build list of task file paths based on selection
-  ansible.builtin.set_fact:
-    ordered_tasks: >-
-      {{
-        task_selection_list
-        | map('regex_replace', '^(.*)$', 'roles/general/tasks/\\1.yml')
-        | list
-      }}
-
 - name: Include selected task files in order
-  ansible.builtin.include_tasks: "{{ task_file }}"
-  loop: "{{ ordered_tasks }}"
+  ansible.builtin.include_tasks: "roles/general/tasks/{{ task_file }}"
+  loop: "{{ task_selection }}"
   loop_control:
     loop_var: task_file
