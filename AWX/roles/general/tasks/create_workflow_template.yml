@@ -1,0 +1,53 @@
+---
+- name: Create workflow template
+  awx.awx.workflow_job_template:
+    name: "F5 Test Workflow Template"
+    organization: "Lab"
+    ask_inventory_on_launch: true
+    ask_tags_on_launch: true
+    job_tags: "qkview,config,reporting"
+    state: present
+    survey_enabled: true
+    survey_spec:
+      name: ""
+      description: ""
+      spec:
+        - max: 1024
+          min: 0
+          type: multiselect
+          choices:
+            - bigip
+          default: bigip
+          required: true
+          variable: awx_hosts_vendor_selection
+          new_question: false
+          question_name: "Hosts"
+          question_description: ""
+
+        - max: 1024
+          min: 0
+          type: text
+          choices: ""
+          default: ""
+          required: false
+          variable: awx_single_hosts_run
+          new_question: true
+          question_name: "Single host run"
+          question_description: ""
+
+        - max: 1024
+          min: 0
+          type: multiselect
+          choices:
+            - generate-qkview
+            - health_check
+            - pre_upgrade_shell
+          default: ""
+          required: false
+          variable: task_selection
+          new_question: false
+          question_name: "Task selection"
+          question_description: ""
+          
+    controller_host: "{{ awx_url }}"
+    controller_oauthtoken: "{{ awx_token }}"

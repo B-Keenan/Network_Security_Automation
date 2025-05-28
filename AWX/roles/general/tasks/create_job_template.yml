@@ -8,6 +8,8 @@
     project: "OCD UK Lab Project"
     playbook: "F5/main.yml"
     organization: "Lab"
+    job_tags: "qkview,config,reporting"
+    ask_tags_on_launch: true
     state: present
     controller_host: "{{ awx_url }}"
     controller_oauthtoken: "{{ awx_token }}"
