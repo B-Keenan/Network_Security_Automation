@@ -1,0 +1,13 @@
+---
+# Could be used to create/modify/delete multiple Job Templates.
+- name: Create F5 Test Job Template
+  awx.awx.job_template:
+    name: "F5 Test"
+    job_type: "run"
+    inventory: "F5 Inventory"
+    project: "OCD UK Lab Project"
+    playbook: "F5/main.yml"
+    organization: "Lab"
+    state: present
+    controller_host: "{{ awx_url }}"
+    controller_oauthtoken: "{{ awx_token }}"
