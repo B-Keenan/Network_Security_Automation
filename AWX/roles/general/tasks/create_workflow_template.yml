@@ -48,6 +48,13 @@
           new_question: false
           question_name: "Task selection"
           question_description: ""
-          
+
+    controller_host: "{{ awx_url }}"
+    controller_oauthtoken: "{{ awx_token }}"
+
+- name: Add Workflow Node
+  awx.awx.workflow_job_template_node:
+    workflow_job_template: "F5 Test Workflow Template"
+    unified_job_template: "F5 Test"
     controller_host: "{{ awx_url }}"
     controller_oauthtoken: "{{ awx_token }}"
