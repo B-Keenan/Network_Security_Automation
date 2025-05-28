@@ -1,7 +1,7 @@
 ---
 - name: Check if Vault-Lookup credential exists
   uri:
-    url: "{{ awx_url }}/credentials/?name=Vault-Lookup"
+    url: "{{ awx_url }}/api/v2/credentials/?name=Vault-Lookup"
     method: GET
     headers:
       Authorization: "Bearer {{ awx_token }}"
@@ -15,7 +15,7 @@
 
 - name: Create Vault Lookup Credential with AppRole if it doesn't exist
   uri:
-    url: "{{ awx_url }}/credentials/"
+    url: "{{ awx_url }}/api/v2/credentials/"
     method: POST
     headers:
       Authorization: "Bearer {{ awx_token }}"

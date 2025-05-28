@@ -16,7 +16,7 @@
 
   vars:
     ansible_connection: local
-    awx_url: "http://awx-service.awx.svc.cluster.local/api/v2"
+    awx_url: "http://awx-service.awx.svc.cluster.local"
     awx_token: "AQZjwTwWhzqewaKa7hNUu51RSaItf0"
     vault_addr: "http://10.255.32.212:30200"
     vault_token: "hvs.kF12bGKaScbSqmeSztGMVFur"
