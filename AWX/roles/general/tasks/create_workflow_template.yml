@@ -54,6 +54,7 @@
 
 - name: Add Workflow Node
   awx.awx.workflow_job_template_node:
+    identifier: "F5 Test Node"
     workflow_job_template: "F5 Test Workflow Template"
     unified_job_template: "F5 Test"
     controller_host: "{{ awx_url }}"
