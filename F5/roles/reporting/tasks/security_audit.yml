@@ -1,11 +1,9 @@
 ---
 - name: Gather subsets
   f5networks.f5_modules.bigip_device_info:
-    partition: "{{ item }}"
     gather_subset:
       - client-ssl-profiles
     provider: "{{ provider }}"
-  loop: "{{ partitions.stdout_lines }}"
   register: device_info
 
 - name: Assert no weak ciphers are configured
