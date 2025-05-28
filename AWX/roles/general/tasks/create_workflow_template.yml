@@ -39,7 +39,7 @@
           min: 0
           type: multiselect
           choices:
-            - generate-qkview
+            - generate_qkview
             - health_check
             - pre_upgrade_shell
           default: ""
