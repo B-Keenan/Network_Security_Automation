@@ -43,8 +43,6 @@
         {{ partition_info.results | map(attribute='ltm_pools')
           | flatten
           | items2dict(key_name='full_path', value_name='availability_status') }}
-      license_info: >-
-        {{ device_info.license | json_query('[0].{max_version: max_permitted_version, expiry: license_end_date}') }}
       ssl_certs: >-
         {{ partition_info.results | map(attribute='ssl_certs')
           | flatten
