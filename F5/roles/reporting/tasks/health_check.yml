@@ -4,6 +4,7 @@
   vars:
     ansible_connection: ssh
     ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+    ansible_port: 22
   register: partitions
 
 - name: Gather subsets
