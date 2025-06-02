@@ -7,33 +7,46 @@
     ansible_port: 22
   register: partitions
 
-- name: Gather subsets
+- name: Gather local time
+  ansible.builtin.setup:
+  delegate_to: localhost
+  delegate_facts: true
+  run_once: true
+
+- name: Gather subsets in Common
+  f5networks.f5_modules.bigip_device_info:
+    gather_subset:
+      - license
+      - partitions
+    provider: "{{ provider }}"
+  register: device_info
+
+- name: Gather subsets for all partitions
   f5networks.f5_modules.bigip_device_info:
     partition: "{{ item }}"
     gather_subset:
       - virtual-servers
       - ltm-pools
-      - license
       - ssl-certs
     provider: "{{ provider }}"
-  loop: "{{ partitions.stdout_lines }}"
-  register: device_info
+  loop: "{{ device_info.partitions | json_query('[*].name') }}"
+  register: partition_info
 
 - name: Parse data
   set_fact:
     collect_stats:
       virtual_servers: >-
-        {{ device_info.results | map(attribute='virtual_servers')
+        {{ partition_info.results | map(attribute='virtual_servers')
           | flatten
           | items2dict(key_name='full_path', value_name='availability_status') }}
       ltm_pools: >-
-        {{ device_info.results | map(attribute='ltm_pools')
+        {{ partition_info.results | map(attribute='ltm_pools')
           | flatten
           | items2dict(key_name='full_path', value_name='availability_status') }}
       license_info: >-
-        {{ device_info.results[0].license | json_query('[0].{max_version: max_permitted_version, expiry: license_end_date}') }}
+        {{ device_info.license | json_query('[0].{max_version: max_permitted_version, expiry: license_end_date}') }}
       ssl_certs: >-
-        {{ device_info.results | map(attribute='ssl_certs')
+        {{ partition_info.results | map(attribute='ssl_certs')
           | flatten
           | items2dict(key_name='full_path', value_name='expiration_date') }}
 
