@@ -3,6 +3,7 @@
   shell: tmsh list auth partition | awk '/auth partition/ {print $3}'
   vars:
     ansible_connection: ssh
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
   register: partitions
 
 - name: Gather subsets
