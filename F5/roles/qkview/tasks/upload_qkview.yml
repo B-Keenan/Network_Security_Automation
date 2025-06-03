@@ -8,7 +8,6 @@
   ansible.builtin.shell: |
     curl --request POST --url https://ihealth2-api.f5.com/qkview-analyzer/api/qkviews?visible_in_gui=true -H "Authorization: Bearer "{{ workflow_artifacts.bearer_token.access_token }}"" -H "Accept: application/vnd.f5.ihealth.api" --user-agent "AnsibleClient" -o - -F qkview=@""{{ tmp_path + inventory_hostname + '.qkview' }}""
   register: upload_response
-  delegate_to: "{{ inventory_hostname }}"
 
 - ansible.builtin.set_stats:
     data:
