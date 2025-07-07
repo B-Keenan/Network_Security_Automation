@@ -93,7 +93,6 @@
         body_format: json
         force_basic_auth: yes
         validate_certs: false
-      when: profiles_response.status == 404
       loop: "{{ pc_user_list }}"
       loop_control:
         label: "{{ item[0] }} - {{ item[1] }}"
