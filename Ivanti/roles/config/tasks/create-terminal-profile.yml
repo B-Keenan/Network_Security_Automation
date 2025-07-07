@@ -104,13 +104,13 @@
         force_basic_auth: yes
         validate_certs: no
     
-  when: profiles_response.status == 404
+  when: profiles_response.results[ansible_loop.index].status == 404
 
   rescue:
     - name: Handle errors
       ansible.builtin.debug:
         msg: "Failed to manage resource profile for {{ item[0] }} and {{ item[1] }}."
-      when: create_response.status != 201
+      when: profiles_response.results[ansible_loop.index].status != 200
       loop: "{{ pc_user_list }}"
       loop_control:
         label: "{{ item[0] }} - {{ item[1] }}"
