@@ -104,13 +104,13 @@
         force_basic_auth: yes
         validate_certs: no
     
-  when: profiles_response.results | map(attribute='status') | list == 404
+  when: profiles_response.results | selectattr('item[0]', 'equalto', item[0]) | map(attribute='status') | list | first == 404
 
   rescue:
     - name: Handle errors
       ansible.builtin.debug:
         msg: "Failed to manage resource profile for {{ item[0] }} and {{ item[1] }}."
-      when: profiles_response.results | map(attribute='status') | list == != 201
+      when: profiles_response.results | selectattr('item[0]', 'equalto', item[0]) | map(attribute='status') | list | first == != 201
       loop: "{{ pc_user_list }}"
       loop_control:
         label: "{{ item[0] }} - {{ item[1] }}"
