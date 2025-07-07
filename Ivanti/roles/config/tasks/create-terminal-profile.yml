@@ -20,6 +20,17 @@
   loop_control:
     label: "{{ item[0] }}"
 
+- name: Check if the resource profile exists
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ item[0] }}"
+    method: GET
+    headers:
+      Authorization: 'Basic {{ authorization }}'
+    force_basic_auth: yes
+    validate_certs: false
+    status_code: [200, 404]
+  register: profiles_response
+
 - name: Iterate over pc_user_list to create resource profiles
   block:
     - name: Create Terminal Service Profile and Assign User Role
@@ -77,15 +88,25 @@
         status_code: 201
         validate_certs: false
       register: create_response
-      ignore_errors: true
       loop: "{{ pc_user_list }}"
       loop_control:
         label: "{{ item[0] }} - {{ item[1] }}"
 
+    - name: Retrieve the profile details
+      ansible.builtin.uri:
+        url: "https://{{ ansible_host }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ item[0] }}"
+        method: GET
+        headers:
+          Authorization: 'Basic {{ authorization }}'
+        force_basic_auth: yes
+        validate_certs: no
+    
+  when: profiles_response.status == 404
+
   rescue:
     - name: Handle errors
       ansible.builtin.debug:
-        msg: "Failed to manage resource profile for {{ item[0] }} and {{ item[1] }}: received status {{ create_response.status }}."
+        msg: "Failed to manage resource profile for {{ item[0] }} and {{ item[1] }}."
       when: create_response.status != 201
       loop: "{{ pc_user_list }}"
       loop_control:
