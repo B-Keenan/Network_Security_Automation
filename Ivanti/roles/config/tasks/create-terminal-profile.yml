@@ -34,6 +34,10 @@
   loop_control:
     label: "{{ item[0] }}"
 
+- name: Debug profiles_response
+  debug:
+    profiles_response.results | map(attribute='status') | list | first
+
 - name: Iterate over pc_user_list to create resource profiles
   block:
     - name: Create Terminal Service Profile and Assign User Role
@@ -104,13 +108,13 @@
         force_basic_auth: yes
         validate_certs: no
     
-  when: profiles_response.results | selectattr('item[0]', 'equalto', item[0]) | map(attribute='status') | list | first == 404
+  when: profiles_response.results | map(attribute='status') | list | first == 404
 
   rescue:
     - name: Handle errors
       ansible.builtin.debug:
         msg: "Failed to manage resource profile for {{ item[0] }} and {{ item[1] }}."
-      when: profiles_response.results | selectattr('item[0]', 'equalto', item[0]) | map(attribute='status') | list | first == != 201
+      when: profiles_response.results | map(attribute='status') | list | first == != 201
       loop: "{{ pc_user_list }}"
       loop_control:
         label: "{{ item[0] }} - {{ item[1] }}"
