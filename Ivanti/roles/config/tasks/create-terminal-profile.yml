@@ -22,30 +22,6 @@
 
 - name: Iterate over pc_user_list to create resource profiles
   block:
-    - name: Check if the resource profile exists for {{ item[0] }}
-      ansible.builtin.uri:
-        url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ item[0] }}"
-        method: GET
-        headers:
-          Accept: "application/json"
-          Authorization: 'Basic {{ authorization }}'
-        body_format: json
-        force_basic_auth: yes
-        validate_certs: false
-        status_code: [200, 404]
-      register: profiles_response
-      loop: "{{ pc_user_list }}"
-      loop_control:
-        label: "{{ item[0] }} - {{ item[1] }}"
-
-    - name: Set fact for profile existence
-      ansible.builtin.set_fact:
-        profile_exists: "{{ profiles_response.status == 200 }}"
-      when: profiles_response.status is defined
-      loop: "{{ pc_user_list }}"
-      loop_control:
-        label: "{{ item[0] }} - {{ item[1] }}"
-
     - name: Create Terminal Service Profile and Assign User Role
       ansible.builtin.uri:
         url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile"
@@ -102,7 +78,7 @@
         status_code: 201
         validate_certs: false
       register: create_response
-      when: profiles_response.status == 404
+      ignore_errors: true
       loop: "{{ pc_user_list }}"
       loop_control:
         label: "{{ item[0] }} - {{ item[1] }}"
