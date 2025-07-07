@@ -37,7 +37,6 @@
           roles:
             - "{{ item[1] }} RDP Users"
           wts:
-            applet: "Premier Java RDP Applet"
             host: "{{ item[0] }}.{{ domain }}"
             sessions:
               session:

@@ -41,7 +41,7 @@
 
 - name: Get terminal service profile list 
   ansible.builtin.uri:
-    url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile"
+    url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/PC0002"
     method: GET
     headers:
       Accept: "application/json"
