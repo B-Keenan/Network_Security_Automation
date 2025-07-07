@@ -34,6 +34,10 @@
   loop_control:
     label: "{{ item[0] }}"
 
+- name: Debug profiles_response
+  ansible.builtin.debug:
+    var: profiles_response
+    
 - name: Iterate over pc_user_list to create resource profiles
   block:
     - name: Create Terminal Service Profile and Assign User Role
