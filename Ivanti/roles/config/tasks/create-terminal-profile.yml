@@ -30,6 +30,9 @@
     validate_certs: false
     status_code: [200, 404]
   register: profiles_response
+  loop: "{{ pc_user_list }}"
+  loop_control:
+    label: "{{ item[0] }}"
 
 - name: Iterate over pc_user_list to create resource profiles
   block:
