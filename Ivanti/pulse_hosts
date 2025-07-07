@@ -1,7 +1,5 @@
 [pulse]
-pcs.example.com ansible_host=10.255.32.191
+ics01.example.com ansible_host=10.255.32.204
 
 [pulse:vars]
-pc_name = "PC000001"
-username = "ben"
 domain = "example.com"
