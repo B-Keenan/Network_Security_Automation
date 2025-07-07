@@ -110,7 +110,7 @@
     - name: Handle errors
       ansible.builtin.debug:
         msg: "Failed to manage resource profile for {{ item[0] }} and {{ item[1] }}."
-      when: profiles_response.results[ansible_loop.index].status != 200
+      when: profiles_response.results | map(attribute='status') | list == != 201
       loop: "{{ pc_user_list }}"
       loop_control:
         label: "{{ item[0] }} - {{ item[1] }}"
