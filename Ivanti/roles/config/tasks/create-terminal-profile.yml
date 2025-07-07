@@ -10,7 +10,7 @@
 - name: Create pc_user_list from input content
   ansible.builtin.set_fact:
     pc_user_list: >
-      {{ (input_content[0] | reject('==', '') | select('!=', 'Hostname User ID') | map('split', ' ') | list) | batch(2) | list }}
+      {{ (input_content[0] | split('\n') | reject('==', '') | select('!=', 'Hostname User ID') | map('split', ' ') | list) | batch(2) | list }}
 
 - name: Check for duplicate pc_names
   ansible.builtin.fail:
