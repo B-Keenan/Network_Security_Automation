@@ -82,23 +82,10 @@
       loop_control:
         label: "{{ item[0] }} - {{ item[1] }}"
 
-    - name: Retrieve the profile details
-      ansible.builtin.uri:
-        url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ item[0] }}"
-        method: GET
-        headers:
-          Accept: "application/json"
-          Authorization: 'Basic {{ authorization }}'
-        body_format: json
-        force_basic_auth: yes
-        validate_certs: false
-      loop: "{{ pc_user_list }}"
-      loop_control:
-        label: "{{ item[0] }} - {{ item[1] }}"
   rescue:
-    - name: Handle API errors
+    - name: Handle errors
       ansible.builtin.debug:
-        msg: "Failed to manage resource profile for {{ item[0] }} and {{ item[1] }}."
+        msg: "Failed to manage resource profile for {{ item[0] }} and {{ item[1] }}: received status {{ create_response.status }}."
       when: create_response.status != 201
       loop: "{{ pc_user_list }}"
       loop_control:
