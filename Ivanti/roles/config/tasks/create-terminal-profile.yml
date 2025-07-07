@@ -34,10 +34,6 @@
   loop_control:
     label: "{{ item[0] }}"
 
-- name: Debug profiles_response
-  ansible.builtin.debug:
-    var: profiles_response
-    
 - name: Iterate over pc_user_list to create resource profiles
   block:
     - name: Create Terminal Service Profile and Assign User Role
@@ -108,7 +104,7 @@
         force_basic_auth: yes
         validate_certs: no
     
-  when: profiles_response.results | selectattr('item[0]', 'equalto', item[0]) | map(attribute='status') | list | first == 404
+  when: profiles_response.results | map(attribute='status') | list == 404
 
   rescue:
     - name: Handle errors

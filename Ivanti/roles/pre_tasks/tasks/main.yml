@@ -38,15 +38,3 @@
     status_code: [200, 401, 403]
   when: authorization is defined
   register: version_response
-
-- name: Get terminal service profile list 
-  ansible.builtin.uri:
-    url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/PC0002"
-    method: GET
-    headers:
-      Accept: "application/json"
-      Authorization: 'Basic {{ authorization }}'
-    body_format: json
-    return_content: true
-    validate_certs: false
-  when: authorization is defined
