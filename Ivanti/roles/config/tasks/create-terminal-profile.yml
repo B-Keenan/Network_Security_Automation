@@ -9,12 +9,12 @@
 ---
 - name: Create pc_user_list from input content
   ansible.builtin.set_fact:
-    pc_user_list: >
-      {{ (input_content | split('\n') | reject('==', '') | select('!=', 'Hostname User ID') | map('split', ' ') | list) | batch(2) | list }}
+    pc_user_list: "{{ input_content.split('\n')[1:] | map('split', ' ') | list }}"
+  when: input_content is defined
 
 - name: Check for duplicate pc_names
   ansible.builtin.fail:
-    msg: "Duplicate pc_name found: {{ item[0] }}. Each name must be unique."
+    msg: "Duplicate name found: {{ item[0] }}. Each name must be unique."
   when: (pc_user_list | map('first') | list | unique | length) != (pc_user_list | length)
   loop: "{{ pc_user_list }}"
   loop_control:
