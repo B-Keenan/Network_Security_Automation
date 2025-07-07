@@ -36,7 +36,7 @@
 
 - name: Debug profiles_response
   debug:
-    profiles_response.results | map(attribute='status') | list | first
+    profiles_response.results
 
 - name: Iterate over pc_user_list to create resource profiles
   block:
