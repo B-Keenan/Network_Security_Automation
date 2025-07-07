@@ -1,5 +1,5 @@
 ---
-- name: Try to authenticate to legacy Pulse
+- name: Login to Ivanti Connect Secure
   ansible.builtin.uri:
     url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/auth"
     method: GET
@@ -14,15 +14,27 @@
   ignore_errors: true
 
 - name: Set oauth variable
-  when:
-    - auth_response.content is defined
   ansible.builtin.set_fact:
     oauth: "{{ auth_response.content | from_json }}"
+  when: auth_response.content is defined
 
 - name: Set authorization data
-  when:
-    - oauth['api_key'] is defined
   vars:
     authorization_data: "{{ oauth['api_key'] }}:"
   ansible.builtin.set_fact:
     authorization: "{{ authorization_data | b64encode }}"
+  when: oauth['api_key'] is defined
+
+- name: Get version
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/system/system-information"
+    method: GET
+    headers:
+      Accept: "application/json"
+      Authorization: 'Basic {{ authorization }}'
+    body_format: json
+    return_content: true
+    validate_certs: false
+    status_code: [200, 401, 403]
+  when: authorization is defined
+  register: version_response

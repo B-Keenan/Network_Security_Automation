@@ -1,40 +1,81 @@
-# Create a terminal service resource profile and assign to an existing User Role.
+# Create a terminal service resource profile and assign to a User Role.
+# Retrieve file contents, e.g.
+# PC0001
+# Ben
+# PC0002
+# Alice
+#
+# Iterate over the list, creating a resource profile and/or User Role for every 2 items, respectively.
+# Custom variables: pc_user_list (list), domain (static), input_file (txt file)
+# To-do: create User Role if it doesn't exist.
 ---
-- name: Check if the resource profile exists
-  ansible.builtin.uri:
-    url: "https://{{ ansible_host }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ pc_name }}"
-    method: GET
-    url_username: "{{ api_key[0] }}"
-    url_password: ""
-    force_basic_auth: yes
-    validate_certs: false
-    status_code: [200, 404]
-  register: profiles_response
+- name: Read the input file
+  ansible.builtin.slurp:
+    src: "{{ input_file }}"
+  register: file_content
+  delegate_to: localhost
 
-- name: Set fact for profile existence
+- name: Validate file content
+  ansible.builtin.fail:
+    msg: "Input file must have an even number of lines (pc_name followed by username)."
+  when: (file_content.content | b64decode | split('\n') | reject('==', '') | length) % 2 != 0
+
+- name: Create pc_user_list from file content
   ansible.builtin.set_fact:
-    profile_exists: "{{ profiles_response.status == 200 }}"
-  when: profiles_response.status is defined
+    pc_user_list: >
+      {{ file_content.content | b64decode | split('\n') | reject('==', '') | batch(2) | list }}
 
-- name: Run Terminal Service Profile Block
+- name: Check for duplicate pc_names
+  ansible.builtin.fail:
+    msg: "Duplicate pc_name found: {{ item[0] }}. Each pc_name must be unique."
+  when: (pc_user_list | map('first') | list | unique | length) != (pc_user_list | length)
+  loop: "{{ pc_user_list }}"
+  loop_control:
+    label: "{{ item[0] }}"
+
+- name: Iterate over pc_user_list to create resource profiles
   block:
-    - name: Create Terminal Service Profile and Assign User Role
+    - name: Check if the resource profile exists for {{ item[0] }}
       ansible.builtin.uri:
-        url: "https://{{ ansible_host }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile"
+        url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ item[0] }}"
+        method: GET
+        headers:
+          Accept: "application/json"
+          Authorization: 'Basic {{ authorization }}'
+        body_format: json
+        force_basic_auth: yes
+        validate_certs: false
+        status_code: [200, 404]
+      register: profiles_response
+      loop: "{{ pc_user_list }}"
+      loop_control:
+        label: "{{ item[0] }} - {{ item[1] }}"
+
+    - name: Set fact for profile existence
+      ansible.builtin.set_fact:
+        profile_exists: "{{ profiles_response.status == 200 }}"
+      when: profiles_response.status is defined
+      loop: "{{ pc_user_list }}"
+      loop_control:
+        label: "{{ item[0] }} - {{ item[1] }}"
+
+    - name: Create Terminal Service Profile and Assign User Role for {{ item[0] }} and {{ item[1] }}
+      ansible.builtin.uri:
+        url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile"
         method: POST
-        url_username: "{{ api_key[0] }}"
-        url_password: ""
         force_basic_auth: yes
         headers:
+          Accept: "application/json"
+          Authorization: 'Basic {{ authorization }}'
           Content-Type: "application/json"
         body_format: json
         body:
-          name: "{{ pc_name }}" # extract value from ticket, e.g., PC000001
+          name: "{{ item[0] }}"
           roles:
-            - "{{ username }} RDP Users" # extract value from ticket, e.g., ben
+            - "{{ item[1] }} RDP Users"
           wts:
             applet: "Premier Java RDP Applet"
-            host: "{{ pc_name }}.{{ domain }}" # domain, e.g., example.com
+            host: "{{ item[0] }}.{{ domain }}"
             sessions:
               session:
                 - alias-name: ""
@@ -57,11 +98,11 @@
                     menu-window-animation: "false"
                     show-content-dragging: "false"
                     themes: "false"
-                  host: "{{ pc_name }}.{{ domain }}"
+                  host: "{{ item[0] }}.{{ domain }}"
                   launch-seamless: "false"
                   microphone-option: "false"
                   multi-mon: "true"
-                  name: "{{ pc_name }}"
+                  name: "{{ item[0] }}"
                   password-type: "variable"
                   path-dir: ""
                   port: "3389"
@@ -69,25 +110,35 @@
                   screen-size: "fullscreen"
                   smartcard-nla: "disabled"
                   sound-options: "bring-to-local"
-                  username: "CORPORATE\\{{ username }}"
-                  variable-password: "" 
+                  username: "CORPORATE\\{{ item[1] }}"
+                  variable-password: ""
         status_code: 201
         validate_certs: false
       register: create_response
-    
-    - name: Retrieve the profile details
+      when: profiles_response.status == 404
+      loop: "{{ pc_user_list }}"
+      loop_control:
+        label: "{{ item[0] }} - {{ item[1] }}"
+
+    - name: Retrieve the profile details for {{ item[0] }} and {{ item[1] }}
       ansible.builtin.uri:
-        url: "https://{{ ansible_host }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ pc_name }}"
+        url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ item[0] }}"
         method: GET
-        url_username: "{{ api_key[0] }}"
-        url_password: ""
+        headers:
+          Accept: "application/json"
+          Authorization: 'Basic {{ authorization }}'
+        body_format: json
         force_basic_auth: yes
-        validate_certs: no
-    
-  when: profiles_response.status == 404
-    
+        validate_certs: false
+      when: profiles_response.status == 404
+      loop: "{{ pc_user_list }}"
+      loop_control:
+        label: "{{ item[0] }} - {{ item[1] }}"
   rescue:
-    - name: Handle API errors
+    - name: Handle API errors for {{ item[0] }} and {{ item[1] }}
       ansible.builtin.debug:
-        msg: "Failed to manage resource profile."
+        msg: "Failed to manage resource profile for {{ item[0] }} and {{ item[1] }}."
       when: create_response.status != 201
+      loop: "{{ pc_user_list }}"
+      loop_control:
+        label: "{{ item[0] }} - {{ item[1] }}"
