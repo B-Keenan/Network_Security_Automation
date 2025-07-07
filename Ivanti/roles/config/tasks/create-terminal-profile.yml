@@ -46,7 +46,7 @@
       loop_control:
         label: "{{ item[0] }} - {{ item[1] }}"
 
-    - name: Create Terminal Service Profile and Assign User Role for {{ item[0] }} and {{ item[1] }}
+    - name: Create Terminal Service Profile and Assign User Role
       ansible.builtin.uri:
         url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile"
         method: POST
@@ -107,7 +107,7 @@
       loop_control:
         label: "{{ item[0] }} - {{ item[1] }}"
 
-    - name: Retrieve the profile details for {{ item[0] }} and {{ item[1] }}
+    - name: Retrieve the profile details
       ansible.builtin.uri:
         url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ item[0] }}"
         method: GET
@@ -122,7 +122,7 @@
       loop_control:
         label: "{{ item[0] }} - {{ item[1] }}"
   rescue:
-    - name: Handle API errors for {{ item[0] }} and {{ item[1] }}
+    - name: Handle API errors
       ansible.builtin.debug:
         msg: "Failed to manage resource profile for {{ item[0] }} and {{ item[1] }}."
       when: create_response.status != 201
