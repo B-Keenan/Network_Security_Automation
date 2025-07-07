@@ -35,8 +35,8 @@
     label: "{{ item[0] }}"
 
 - name: Debug profiles_response
-  debug:
-    profiles_response.results
+  ansible.builtin.debug:
+    var: profiles_response.results
 
 - name: Iterate over pc_user_list to create resource profiles
   block:
