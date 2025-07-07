@@ -1,29 +1,16 @@
-# Create a terminal service resource profile and assign to a User Role.
+# Create a terminal service resource profile and assign to an existing User Role.
 # Retrieve file contents, e.g.
-# PC0001
-# Ben
-# PC0002
-# Alice
+# Hostname User ID
+# PC0001 ben
+# PC0002 alice
 #
 # Iterate over the list, creating a resource profile and/or User Role for every 2 items, respectively.
 # Custom variables: pc_user_list (list), domain (static), input_file (txt file)
-# To-do: create User Role if it doesn't exist.
 ---
-- name: Read the input file
-  ansible.builtin.slurp:
-    src: "{{ input_file }}"
-  register: file_content
-  delegate_to: localhost
-
-- name: Validate file content
-  ansible.builtin.fail:
-    msg: "Input file must have an even number of lines (pc_name followed by username)."
-  when: (file_content.content | b64decode | split('\n') | reject('==', '') | length) % 2 != 0
-
-- name: Create pc_user_list from file content
+- name: Create pc_user_list from input content
   ansible.builtin.set_fact:
     pc_user_list: >
-      {{ file_content.content | b64decode | split('\n') | reject('==', '') | batch(2) | list }}
+      {{ input_content | split('\n') | reject('==', '') | select('!=', 'Hostname User ID') | batch(2) | list }}
 
 - name: Check for duplicate pc_names
   ansible.builtin.fail:
