@@ -1,12 +1,12 @@
 ---
 - name: Login to Ivanti Connect Secure
   ansible.builtin.uri:
-    url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/auth"
-    method: GET
+    url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/realm_auth"
+    method: POST
     force_basic_auth: true
     user: "admin"
     password: "[3kVN-scZpM4oXQSLh2D"
-    # body: "{{ provider }}"
+    body: "{ \"realm\": \"Admin Users\" }"
     body_format: json
     return_content: true
     validate_certs: false
