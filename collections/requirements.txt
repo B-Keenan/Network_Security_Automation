@@ -4,3 +4,4 @@ paramiko
 netaddr
 ncclient
 xmltodict
+openpyxl

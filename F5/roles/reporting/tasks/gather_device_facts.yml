@@ -1,0 +1,7 @@
+---
+- name: Gather all subsets
+  f5networks.f5_modules.bigip_device_info:
+    gather_subset:
+      - all
+    provider: "{{ provider }}"
+  register: device_info
