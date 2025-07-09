@@ -6,4 +6,4 @@ bigipl4.example.com ansible_host=10.255.32.196
 ansible_ssh_common_args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
 
 [utility_servers]
-utility01 ansible_host=10.255.32.212 ansible_user=benk
+utility01 ansible_host=10.255.32.210 ansible_user=benk
