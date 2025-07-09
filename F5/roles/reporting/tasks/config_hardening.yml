@@ -46,7 +46,7 @@
     mode: '0755'
 
 - name: Run Excel report generation script
-  ansible.builtin.command: python3 /tmp/f5_report_script.py
+  ansible.builtin.command: python3 ./f5_report_script.py
   changed_when: true
 
 # For testing
