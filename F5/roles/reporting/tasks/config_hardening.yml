@@ -51,7 +51,4 @@
 
 # For testing
 - name: Copy Excel to remote host
-  ansible.builtin.copy:
-    src: "{{ excel_report }}"
-    dest: "benk@10.255.32.212:/var/tmp/"
-    mode: '0644'
+  ansible.builtin.include_tasks: "roles/reporting/tasks/ssh_task.yml"
