@@ -12,7 +12,8 @@
   set_fact:
     mgmt_access_status: "{{ '✖' if (mgmt_acl.stdout | regex_search('allow\\s*{ All }') or
                                     mgmt_acl.stdout | regex_search('allow\\s*{ ALL }') or
-                                    mgmt_acl.stdout | regex_search('management-ip-rules\\s*{ }')) else '✔' }}"
+                                    mgmt_acl.stdout | regex_search('management-ip-rules\\s*{ }'))
+                                    else '✔' }}"
 
 - name: Set management access notes
   set_fact:
@@ -33,8 +34,6 @@
   run_once: true
 
 - name: Create Excel report directory
-  vars:
-    excel_report: "./f5_report.xlsx"
   ansible.builtin.file:
     path: "{{ excel_report | dirname }}"
     state: directory
