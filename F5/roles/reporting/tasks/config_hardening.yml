@@ -52,4 +52,4 @@
 # For testing
 - name: Copy Excel to remote host
   ansible.builtin.command:
-    cmd: "scp -i /tmp/id_rsa -o StrictHostKeyChecking=no ./{{ excel_report }} benk@10.255.32.210:/var/tmp/"
+    cmd: "scp -i /tmp/id_rsa -o StrictHostKeyChecking=no {{ excel_report }} benk@10.255.32.210:/var/tmp/"
