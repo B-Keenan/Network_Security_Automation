@@ -1,0 +1,55 @@
+---
+- name: Gather management access rules
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - list sys httpd allow
+      - list sys sshd allow
+      - list security firewall management-ip-rules
+    provider: "{{ provider }}"
+  register: mgmt_acl
+
+- name: Parse management access rules and set status
+  set_fact:
+    mgmt_access_status: "{{ '✖' if (mgmt_acl.results[0].stdout | regex_search('allow { All }') or
+                                    mgmt_acl.results[1].stdout | regex_search('allow { ALL }') or
+                                    mgmt_acl.results[2].stdout | regex_search('management-ip-rules { }')) else '✔' }}"
+    mgmt_access_notes: "{{ 'Default configuration detected: HTTPD or SSHD allows all, or no management IP rules' if mgmt_access_status == '✖' else 'Management access restricted' }}"
+
+- name: Calculate summary metrics
+  set_fact:
+    total_checks: 1
+    passed_checks: "{{ 1 if mgmt_access_status == '✔' else 0 }}"
+    failed_checks: "{{ 1 if mgmt_access_status == '✖' else 0 }}"
+    na_checks: 0
+    overall_status: "{{ 'Medium Risk' if mgmt_access_status == '✖' else 'Low Risk' }}"
+
+- name: Ensure openpyxl is installed
+  ansible.builtin.pip:
+    name: openpyxl
+    executable: pip3
+  run_once: true
+
+- name: Create Excel report directory
+  vars:
+    excel_report: "./f5_report.xlsx"
+  ansible.builtin.file:
+    path: "{{ excel_report | dirname }}"
+    state: directory
+    mode: '0755'
+
+- name: Generate Excel report
+  ansible.builtin.template:
+    src: f5_report_template.py.j2
+    dest: ./f5_report_script.py
+    mode: '0755'
+
+- name: Run Excel report generation script
+  ansible.builtin.command: python3 /tmp/f5_report_script.py
+  changed_when: true
+
+# For testing
+- name: Copy Excel to remote host
+  ansible.builtin.copy:
+    src: "{{ excel_report }}"
+    dest: "benk@10.255.32.210:/var/tmp/"
+    mode: '0644'

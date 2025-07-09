@@ -1,0 +1,54 @@
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.worksheet.table import Table, TableStyleInfo
+
+wb = Workbook()
+wb.remove(wb.active)  # Remove default sheet
+
+# Executive Summary Sheet
+summary = wb.create_sheet("Executive Summary")
+summary.append(["Category", "Total Checks", "Passed", "Failed", "N/A", "Overall Status"])
+summary.append(["Configuration Hardening", {{ total_checks }}, {{ passed_checks }}, {{ failed_checks }}, {{ na_checks }}, "{{ overall_status }}"])
+
+# Styling for Executive Summary
+for cell in summary[1]:
+    cell.font = Font(bold=True)
+    cell.fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+    cell.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+
+summary_table = Table(displayName="SummaryTable", ref="A1:F2")
+summary_table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
+summary.add_table(summary_table)
+
+# Configuration Hardening Sheet
+hardening = wb.create_sheet("Configuration Hardening")
+hardening.append(["Check Category", "Check Item", "Status (✔/✖/N/A)", "Notes"])
+hardening.append(["Management Access", "Management interface access is restricted via ACLs", "{{ mgmt_access_status }}", "{{ mgmt_access_notes }}"])
+
+# Styling for Configuration Hardening
+for cell in hardening[1]:
+    cell.font = Font(bold=True)
+    cell.fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+    cell.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+
+hardening_table = Table(displayName="HardeningTable", ref="A1:D2")
+hardening_table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
+hardening.add_table(hardening_table)
+
+# Adjust column widths
+for sheet in [summary, hardening]:
+    for col in sheet.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            try:
+                if len(str(cell.value)) > max_length:
+                    max_length = len(str(cell.value))
+            except:
+                pass
+        adjusted_width = (max_length + 2) * 1.2
+        sheet.column_dimensions[column].width = adjusted_width
+
+wb.save("{{ excel_report }}")
