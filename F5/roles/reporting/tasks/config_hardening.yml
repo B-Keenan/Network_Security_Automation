@@ -13,6 +13,9 @@
     mgmt_access_status: "{{ '✖' if (mgmt_acl.stdout | regex_search('allow\\s*{ All }') or
                                     mgmt_acl.stdout | regex_search('allow\\s*{ ALL }') or
                                     mgmt_acl.stdout | regex_search('management-ip-rules\\s*{ }')) else '✔' }}"
+
+- name: Set management access notes
+  set_fact:
     mgmt_access_notes: "{{ 'Default configuration detected: HTTPD or SSHD allows all, or no management IP rules' if mgmt_access_status == '✖' else 'Management access restricted' }}"
 
 - name: Calculate summary metrics
