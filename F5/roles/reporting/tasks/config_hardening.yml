@@ -11,7 +11,6 @@
 - name: Parse management access rules and set status
   set_fact:
     mgmt_access_status: "{{ '✖' if (mgmt_acl.stdout | regex_search('allow\\s*{ All }') or
-                                    mgmt_acl.stdout | regex_search('allow\\s*{ ALL }') or
                                     mgmt_acl.stdout | regex_search('management-ip-rules\\s*{ }'))
                                     else '✔' }}"
 
