@@ -24,7 +24,9 @@ summary.add_table(summary_table)
 # Configuration Hardening Sheet
 hardening = wb.create_sheet("Configuration Hardening")
 hardening.append(["Check Category", "Check Item", "Status (✔/✖/N/A)", "Notes"])
-hardening.append(["Management Access", "Management interface access is restricted via ACLs", "{{ mgmt_access_status }}", "{{ mgmt_access_notes }}"])
+{% for check in check_results %}
+hardening.append(["{{ check.check_category }}", "{{ check.check_item }}", "{{ check.status }}", "{{ check.notes }}"])
+{% endfor %}
 
 # Styling for Configuration Hardening
 for cell in hardening[1]:
@@ -33,7 +35,7 @@ for cell in hardening[1]:
     cell.alignment = Alignment(horizontal="center", vertical="center")
     cell.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
-hardening_table = Table(displayName="HardeningTable", ref="A1:D2")
+hardening_table = Table(displayName="HardeningTable", ref="A1:D{{ check_results | length + 1 }}")
 hardening_table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
 hardening.add_table(hardening_table)
 
