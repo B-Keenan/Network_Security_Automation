@@ -7,12 +7,11 @@
 
 - name: Check allow-service is set to none
   set_fact:
-    mgmt_services_status: "{{ '✔' if mgmt_services.stdout | regex_search('allow-service none')
-                                else '✖' }}"
+    mgmt_services_status: "{{ '✔' if mgmt_services.stdout | regex_search('allow-service none') else '✖' }}"
 
 - name: Set management services notes
   set_fact:
-    mgmt_services_notes: "{{ 'Allow-service set to none' if mgmt_services_status == '✔' else 'Self IP's open; check port lockdown settings.' }}"
+    mgmt_services_notes: "{{ 'Allow-service set to none' if mgmt_services_status == '✔' else 'Check port lockdown settings' }}"
 
 - name: Append management services check to results
   set_fact:
