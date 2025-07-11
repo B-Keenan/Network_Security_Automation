@@ -1,0 +1,19 @@
+- name: List net self allow-service
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - list net self allow-service
+    provider: "{{ provider }}"
+  register: mgmt_services
+
+- name: Check allow-service is set to none
+  set_fact:
+    mgmt_services_status: "{{ '✔' if mgmt_services.stdout | regex_search('allow-service none')
+                                else '✖' }}"
+
+- name: Set management services notes
+  set_fact:
+    mgmt_services_notes: "{{ 'Allow-service set to none' if mgmt_services_status == '✔' else 'Self IP's open; check port lockdown settings.' }}"
+
+- name: Append management services check to results
+  set_fact:
+    check_results: "{{ check_results + [{'check_category': 'Management Access', 'check_item': 'No management services on data plane interfaces', 'status': mgmt_services_status, 'notes': mgmt_services_notes}] }}"

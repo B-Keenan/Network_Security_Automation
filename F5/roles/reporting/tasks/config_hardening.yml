@@ -2,6 +2,9 @@
 - name: Include mgmt_acl task
   ansible.builtin.include_tasks: mgmt_acl.yml
 
+- name: Include mgmt_services task
+  ansible.builtin.include_tasks: mgmt_services.yml
+
 - name: Calculate summary metrics
   set_fact:
     total_checks: "{{ check_results | length }}"
