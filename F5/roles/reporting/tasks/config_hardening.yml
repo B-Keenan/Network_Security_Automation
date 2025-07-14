@@ -5,11 +5,14 @@
 - name: Include mgmt_services task
   ansible.builtin.include_tasks: mgmt_services.yml
 
-- name: Include mgmt_services task
+- name: Include ntp_config task
   ansible.builtin.include_tasks: ntp_config.yml
 
-- name: Include mgmt_services task
+- name: Include dns_config task
   ansible.builtin.include_tasks: dns_config.yml
+
+- name: Include syslog_config task
+  ansible.builtin.include_tasks: syslog_config.yml
 
 - name: Calculate summary metrics
   set_fact:
