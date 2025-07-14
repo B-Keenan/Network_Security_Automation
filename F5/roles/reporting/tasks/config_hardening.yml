@@ -8,6 +8,9 @@
 - name: Include mgmt_services task
   ansible.builtin.include_tasks: ntp_config.yml
 
+- name: Include mgmt_services task
+  ansible.builtin.include_tasks: dns_config.yml
+
 - name: Calculate summary metrics
   set_fact:
     total_checks: "{{ check_results | length }}"

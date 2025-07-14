@@ -1,0 +1,26 @@
+- name: List DNS configuration
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - list sys dns all-properties
+    provider: "{{ provider }}"
+  register: dns_config
+
+- name: Check DNS servers
+  set_fact:
+    dns_servers_status: "{{ '✖' if (dns_config.stdout[0] is search('name-servers none')) else ('✔' if (dns_servers_count | int >= 2 and (dns_config.stdout[0] is search('servers { (10|172|192)\\.'))) else '✖') }}"
+  vars:
+    dns_servers_count: "{{ 0 if (dns_config.stdout[0] is search('servers none')) else (dns_config.stdout[0] | regex_findall('servers {') | length) }}"
+
+- name: Set DNS check notes
+  set_fact:
+    dns_notes: >-
+      {{ 'Internal DNS servers configured' if dns_servers_status == '✔' else 'External or unknown DNS servers configured' }}
+
+- name: Append DNS configuration check to results
+  set_fact:
+    check_results: "{{ check_results + [{
+      'check_category': 'DNS',
+      'check_item': 'DNS uses internal servers',
+      'status': dns_servers_status,
+      'notes': dns_notes
+      }] }}"
