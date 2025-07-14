@@ -7,7 +7,7 @@
 
 - name: Check Syslog servers
   set_fact:
-    syslog_servers_status: "{{ '✖' if (syslog_config.stdout[0] is search('remote-servers none')) else ('✔' if (syslog_config.stdout[0] is search('remote-servers { (10|172|192)\\.'))) else '✖') }}"
+    syslog_servers_status: "{{ '✖' if (syslog_config.stdout[0] is search('remote-servers none')) else ('✔' if (syslog_config.stdout[0] is search('remote-servers { (10|172|192)\\.')) else '✖') }}"
 
 - name: Set Syslog check notes
   set_fact:
