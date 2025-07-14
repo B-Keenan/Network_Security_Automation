@@ -1,0 +1,31 @@
+- name: List NTP configuration
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - list sys ntp all-properties
+    provider: "{{ provider }}"
+  register: ntp_config
+
+- name: Check NTP servers
+  set_fact:
+    ntp_servers_status: "{{ '✔' if (ntp_servers_count >= 2 and (ntp_config.stdout[0] is search('servers { (10|172|192)\\.') or ntp_config.stdout[0] is search('servers { [a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}'))) else '✖' }}"
+  vars:
+    ntp_servers_count: "{{ ntp_config.stdout[0] | regex_findall('servers {') | length }}"
+
+- name: Check if NTP authentication is enabled
+  set_fact:
+    ntp_auth_enabled: "{{ '✔' if (ntp_config.stdout[0] is search('include.*key')) else '✖' }}"
+
+- name: Set NTP check notes
+  set_fact:
+    ntp_notes: >-
+      {{ 'Internal NTP servers configured' if ntp_servers_status == '✔' else 'External or unknown NTP servers configured' }}
+      {{ 'and NTP authentication enabled' if ntp_auth_enabled == '✔' else 'and NTP authentication not enabled' }}
+
+- name: Append NTP configuration check to results
+  set_fact:
+    check_results: "{{ check_results + [{
+      'check_category': 'Time Synchronization',
+      'check_item': 'NTP uses internal trusted servers with optional authentication',
+      'status': ntp_servers_status,
+      'notes': ntp_notes
+      }] }}"
