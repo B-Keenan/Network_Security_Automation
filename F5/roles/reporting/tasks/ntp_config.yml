@@ -7,7 +7,7 @@
 
 - name: Check NTP servers
   set_fact:
-    ntp_servers_status: "{{ '✖' if (ntp_config.stdout[0] is search('servers none')) else ('✔' if (ntp_servers_count >= 2 and (ntp_config.stdout[0] is search('servers { (10|172|192)\\.') or ntp_config.stdout[0] is search('servers { [a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}'))) else '✖') }}"
+    ntp_servers_status: "{{ '✖' if (ntp_config.stdout[0] is search('servers none')) else ('✔' if (ntp_servers_count | int >= 2 and (ntp_config.stdout[0] is search('servers { (10|172|192)\\.') or ntp_config.stdout[0] is search('servers { [a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}'))) else '✖') }}"
   vars:
     ntp_servers_count: "{{ 0 if (ntp_config.stdout[0] is search('servers none')) else (ntp_config.stdout[0] | regex_findall('servers {') | length) }}"
 
