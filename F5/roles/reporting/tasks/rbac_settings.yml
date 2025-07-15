@@ -15,7 +15,7 @@
           {{ roles.extend(line | regex_findall('role\s+(\w+)')) }}
         {% endif %}
       {% endfor %}
-      {{ '✔' if roles | reject('eq', 'admin') | list | length > 0 else '✖' }}
+      {{ '✔' if roles | reject('eq', 'admin') | list | length > 0 else '✖' | trim }}
 
 - name: Set user role check notes
   set_fact:
