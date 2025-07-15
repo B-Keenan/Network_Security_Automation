@@ -108,7 +108,7 @@
         force_basic_auth: yes
         validate_certs: no
     
-  when: profiles_response.results | map(attribute='status') | list | first == 404
+  when: profiles_response.results | map(attribute='status') == 404
 
   rescue:
     - name: Handle errors
