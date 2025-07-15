@@ -98,6 +98,7 @@
       loop: "{{ pc_user_list }}"
       loop_control:
         label: "{{ item[0] }} - {{ item[1] }}"
+      when: profiles_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='status') | first == 404
 
     - name: Retrieve the profile details
       ansible.builtin.uri:
@@ -106,15 +107,18 @@
         headers:
           Authorization: 'Basic {{ authorization }}'
         force_basic_auth: yes
-        validate_certs: no
-    
-  when: profiles_response.results | map(attribute='status') == 404
+        validate_certs: false
+        status_code: [200]
+      loop: "{{ pc_user_list }}"
+      loop_control:
+        label: "{{ item[0] }} - {{ item[1] }}"
+      when: profiles_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='status') | first == 404
 
   rescue:
     - name: Handle errors
       ansible.builtin.debug:
-        msg: "Failed to manage resource profile for {{ item[0] }} and {{ item[1] }}."
-      when: profiles_response.results | map(attribute='status') | list | first == != 201
+        msg: "Failed to manage resource profile for {{ item[0] }} and {{ item[1] }}. Error: {{ create_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='msg') | first | default('Unknown error') }}"
       loop: "{{ pc_user_list }}"
       loop_control:
         label: "{{ item[0] }} - {{ item[1] }}"
+      when: create_response.results is defined and create_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='failed') | first | default(false)
