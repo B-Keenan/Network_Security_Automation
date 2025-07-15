@@ -7,13 +7,13 @@
 
 - name: Check NTP servers
   set_fact:
-    ntp_servers_status: "{{ '✖' if (ntp_config.stdout[0] is search('servers none')) else ('✔' if (ntp_servers_count | int >= 2 and (ntp_config.stdout[0] is search('servers { (10|172|192)\\.') or ntp_config.stdout[0] is search('servers { [a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}'))) else '✖') }}"
+    ntp_servers_status: "{{ '✖' if (ntp_config.stdout | regex_search('servers none')) else ('✔' if (ntp_servers_count | int >= 2 and (ntp_config.stdout | regex_search('servers {.*(10\\.|172\\.(1[6-9]|2[0-9]|3[0-1])\\.|192\\.168\\.).*'))) else '✖') }}"
   vars:
-    ntp_servers_count: "{{ 0 if (ntp_config.stdout[0] is search('servers none')) else (ntp_config.stdout[0] | regex_findall('servers {') | length) }}"
+    ntp_servers_count: "{{ 0 if (ntp_config.stdout | regex_search('servers none')) else (ntp_config.stdout | regex_findall('\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b') | length) }}"
 
 - name: Check if NTP authentication is enabled
   set_fact:
-    ntp_auth_enabled: "{{ '✔' if (ntp_config.stdout[0] is search('include.*key')) else '✖' }}"
+    ntp_auth_enabled: "{{ '✔' if (ntp_config.stdout is search('include.*key')) else '✖' }}"
 
 - name: Set NTP check notes
   set_fact:
