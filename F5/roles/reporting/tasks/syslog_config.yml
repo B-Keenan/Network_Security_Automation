@@ -7,12 +7,12 @@
 
 - name: Check Syslog servers
   set_fact:
-    syslog_servers_status: "{{ '✖' if (syslog_config.stdout[0] is search('remote-servers none')) else ('✔' if (syslog_config.stdout[0] is search('remote-servers { (10|172|192)\\.')) else '✖') }}"
+    syslog_servers_status: "{{ '✖' if syslog_config.stdout | regex_search('servers none') else '✔' }}"
 
 - name: Set Syslog check notes
   set_fact:
     syslog_notes: >-
-      {{ 'Internal Syslog servers configured' if syslog_servers_status == '✔' else 'External or unknown Syslog servers configured' }}
+      {{ 'Syslog servers configured' if syslog_servers_status == '✔' else 'No Syslog servers configured' }}
 
 - name: Append DNS configuration check to results
   set_fact:
