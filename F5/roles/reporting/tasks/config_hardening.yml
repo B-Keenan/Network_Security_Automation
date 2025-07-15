@@ -17,6 +17,9 @@
 - name: Include password_policy task
   ansible.builtin.include_tasks: password_policy.yml
 
+- name: Include rbac_settings task
+  ansible.builtin.include_tasks: rbac_settings.yml
+
 - name: Calculate summary metrics
   set_fact:
     total_checks: "{{ check_results | length }}"

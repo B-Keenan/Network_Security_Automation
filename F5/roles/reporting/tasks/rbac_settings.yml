@@ -1,0 +1,32 @@
+- name: List local and remote users
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - list auth user
+      - list auth remote-role
+    provider: "{{ provider }}"
+  register: rbac_settings
+
+- name: Check roles for non-default users and remote roles
+  set_fact:
+    user_role: >-
+      {% set roles = [] %}
+      {% for line in rbac_settings.stdout %}
+        {% if 'auth user admin' not in line %}
+          {{ roles.extend(line | regex_findall('role\s+(\w+)')) }}
+        {% endif %}
+      {% endfor %}
+      {{ '✔' if roles | reject('eq', 'admin') | list | length > 0 else '✖' }}
+
+- name: Set user role check notes
+  set_fact:
+    user_role_notes: >-
+      {{ 'Other non-admin roles exist' if user_role == '✔' else 'Only admin roles exist for non-default users and remote roles' }}
+
+- name: Append user role check to results
+  set_fact:
+    check_results: "{{ check_results + [{
+      'check_category': 'User Accounts & Authentication',
+      'check_item': 'Role-based access control (RBAC) enforced',
+      'status': user_role,
+      'notes': user_role_notes
+      }] }}"
