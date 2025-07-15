@@ -9,13 +9,13 @@
 - name: Check roles for non-default users and remote roles
   set_fact:
     user_role: >-
-      {% set roles = [] %}
-      {% for line in rbac_settings.stdout %}
-        {% if 'auth user admin' not in line %}
-          {{ roles.extend(line | regex_findall('role\s+(\w+)')) }}
-        {% endif %}
-      {% endfor %}
-      {{ '✔' if roles | reject('eq', 'admin') | list | length > 0 else '✖' | trim }}
+      {%- set roles = [] -%}
+      {%- for line in rbac_settings.stdout -%}
+        {%- if 'auth user admin' not in line -%}
+          {{- roles.extend(line | regex_findall('role\s+(\w+)')) -}}
+        {%- endif -%}
+      {%- endfor -%}
+      {{- '✔' if roles | reject('eq', 'admin') | list | length > 0 else '✖' -}}
 
 - name: Set user role check notes
   set_fact:
