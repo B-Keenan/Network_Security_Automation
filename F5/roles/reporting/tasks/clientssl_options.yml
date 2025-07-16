@@ -7,19 +7,7 @@
 
 - name: Parse non-default profiles for no-tlsv1 and no-tlsv1.1
   set_fact:
-    clientssl_profile_options: >
-      {{-
-        '✔' if clientssl_options.stdout_lines
-        | select('match', '^ltm profile client-ssl (\\S+/)?\\S+')
-        | map('regex_search', '^ltm profile client-ssl ((\\S+/)?\\S+)')
-        | map('regex_replace', '^ltm profile client-ssl ((\\S+/)?\\S+).*', '\\1')
-        | reject('in', ['Common/clientssl', 'Common/clientssl-insecure-compatible', 'Common/clientssl-quic', 'Common/clientssl-secure', 'Common/crypto-server-default-clientssl', 'Common/splitsession-default-clientssl', 'Common/wom-default-clientssl'])
-        | list
-        | select('match', '.*no-tlsv1.*no-tlsv1\\.1|.*no-tlsv1\\.1.*no-tlsv1', clientssl_options.stdout_lines)
-        | list
-        | length > 0
-        else '✖'
-      -}}
+    clientssl_profile_options: "{{ '✔' if clientssl_options.stdout | regex_search('ltm profile client-ssl (?!(Common/clientssl|Common/clientssl-insecure-compatible|Common/clientssl-quic|Common/clientssl-secure|Common/crypto-server-default-clientssl|Common/splitsession-default-clientssl|Common/wom-default-clientssl))(\\S+/)?\\S+\\s*{[^}]*no-tlsv1[^}]*no-tlsv1\\.1[^}]*}') else '✖' }}"
 
 - name: Set clientssl profile options check notes
   set_fact:
