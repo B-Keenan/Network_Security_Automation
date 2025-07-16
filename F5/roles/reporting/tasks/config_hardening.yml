@@ -23,6 +23,9 @@
 - name: Include remote_auth task
   ansible.builtin.include_tasks: remote_auth.yml
 
+- name: Include fallback_to_local task
+  ansible.builtin.include_tasks: fallback_to_local.yml
+
 - name: Calculate summary metrics
   set_fact:
     total_checks: "{{ check_results | length }}"

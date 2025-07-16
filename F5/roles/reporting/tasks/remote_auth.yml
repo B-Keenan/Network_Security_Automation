@@ -1,13 +1,13 @@
-- name: List local and remote users
+- name: List auth source
   f5networks.f5_modules.bigip_command:
     commands:
-      - list auth source
+      - list auth source all-properties
     provider: "{{ provider }}"
   register: remote_auth
 
 - name: Check remote auth is enabled
   set_fact:
-    remote_auth_enabled: "{{ '✖' if remote_auth.stdout | regex_search('auth source { }') else '✔' }}"
+    remote_auth_enabled: "{{ '✖' if remote_auth.stdout | regex_search('type local') else '✔' }}"
 
 - name: Set remote auth check notes
   set_fact:

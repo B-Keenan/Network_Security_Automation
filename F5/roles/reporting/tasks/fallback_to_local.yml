@@ -1,0 +1,24 @@
+- name: List auth source all-properties
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - list auth source all-properties
+    provider: "{{ provider }}"
+  register: system_fallback_setting
+
+- name: Check fallback to local setting
+  set_fact:
+    fallback_to_local_setting: "{{ '✔' if system_fallback_setting.stdout | regex_search('fallback false') else '✖' }}"
+
+- name: Set fallback to local check notes
+  set_fact:
+    fallback_to_local_notes: >-
+      {{ 'Fallback to local is set to false' if fallback_to_local_setting == '✔' else 'Fallback to local is set to true' }}
+
+- name: Append fallback to local check to results
+  set_fact:
+    check_results: "{{ check_results + [{
+      'check_category': 'User Accounts & Authentication',
+      'check_item': 'Local authentication fallback disabled (if feasible)',
+      'status': fallback_to_local_setting,
+      'notes': fallback_to_local_notes
+      }] }}"
