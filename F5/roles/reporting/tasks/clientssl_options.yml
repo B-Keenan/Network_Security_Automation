@@ -1,7 +1,7 @@
 - name: List client-ssl profile options
   f5networks.f5_modules.bigip_command:
     commands:
-      - list ltm profile client-ssl options
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile client-ssl recursive options'"
     provider: "{{ provider }}"
   register: clientssl_options
 
