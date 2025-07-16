@@ -29,6 +29,9 @@
 - name: Include clientssl_options task
   ansible.builtin.include_tasks: clientssl_options.yml
 
+- name: Include clientssl_options task
+  ansible.builtin.include_tasks: clientssl_ciphers.yml
+
 - name: Calculate summary metrics
   set_fact:
     total_checks: "{{ check_results | length }}"
