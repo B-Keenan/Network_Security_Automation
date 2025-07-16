@@ -20,6 +20,9 @@
 - name: Include rbac_settings task
   ansible.builtin.include_tasks: rbac_settings.yml
 
+- name: Include remote_auth task
+  ansible.builtin.include_tasks: remote_auth.yml
+
 - name: Calculate summary metrics
   set_fact:
     total_checks: "{{ check_results | length }}"

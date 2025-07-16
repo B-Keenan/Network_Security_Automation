@@ -1,0 +1,24 @@
+- name: List local and remote users
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - list auth source
+    provider: "{{ provider }}"
+  register: remote_auth
+
+- name: Check remote auth is enabled
+  set_fact:
+    remote_auth_enabled: "{{ '✖' if remote_auth.stdout | regex_search('auth source { }') else '✔' }}"
+
+- name: Set remote auth check notes
+  set_fact:
+    remote_auth_notes: >-
+      {{ 'Remote authentication is enabled' if remote_auth_enabled == '✔' else 'Remote authentication is disabled' }}
+
+- name: Append remote auth check to results
+  set_fact:
+    check_results: "{{ check_results + [{
+      'check_category': 'User Accounts & Authentication',
+      'check_item': 'Remote authentication (LDAP/RADIUS/TACACS+) implemented',
+      'status': remote_auth_enabled,
+      'notes': remote_auth_notes
+      }] }}"
