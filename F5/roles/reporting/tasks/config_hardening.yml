@@ -26,6 +26,9 @@
 - name: Include fallback_to_local task
   ansible.builtin.include_tasks: fallback_to_local.yml
 
+- name: Include clientssl_options task
+  ansible.builtin.include_tasks: clientssl_options.yml
+
 - name: Calculate summary metrics
   set_fact:
     total_checks: "{{ check_results | length }}"
