@@ -1,4 +1,4 @@
-# Create a terminal service resource profile and assign to an existing User Role.
+# Create a terminal service resource profile and assign to a User Role.
 # Retrieve contents, e.g.
 # Hostname User ID
 # PC0001 ben
@@ -46,8 +46,6 @@
     body_format: json
     body:
       name: "{{ item[1] }} RDP Users"
-      description: "RDP Users role for {{ item[1] }}"
-      enabled: true
     status_code: 201
     validate_certs: false
   loop: "{{ pc_user_list }}"
