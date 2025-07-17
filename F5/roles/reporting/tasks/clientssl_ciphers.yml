@@ -7,7 +7,7 @@
 
 - name: Parse non-default profiles for secure cipher suites
   set_fact:
-    clientssl_profile_ciphers: "{{ '✖' if clientssl_ciphers.stdout | regex_search('ltm profile client-ssl (?!(Common/clientssl|Common/clientssl-insecure-compatible|Common/clientssl-quic|Common/clientssl-secure|Common/crypto-server-default-clientssl|Common/splitsession-default-clientssl|Common/wom-default-clientssl))(\\S+/)?\\S+\\s*{[^}]*ciphers\\s+(DEFAULT|ALL|none|.*(DES|3DES|RC4|MD5|ADH|EXP).*)\\s*}') else '✔' }}"
+    clientssl_profile_ciphers: "{{ '✖' if clientssl_ciphers.stdout | regex_search('ltm profile client-ssl (?!(Common/clientssl|Common/clientssl-insecure-compatible|Common/clientssl-quic|Common/clientssl-secure|Common/crypto-server-default-clientssl|Common/splitsession-default-clientssl|Common/wom-default-clientssl))(\\S+/)?\\S+\\s*{[^}]*ciphers\\s+(DEFAULT|ALL|.*(DES|3DES|RC4|MD5|ADH|EXP).*)\\s*}') else '✔' }}"
 
 - name: Set clientssl cipher suites check notes
   set_fact:
