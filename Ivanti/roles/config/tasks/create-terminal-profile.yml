@@ -20,6 +20,67 @@
   loop_control:
     label: "{{ item[0] }}"
 
+- name: Check if User Role exists
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}/api/v1/configuration/users/user-roles/{{ item[1] }}%20RDP%20Users"
+    method: GET
+    headers:
+      Authorization: 'Basic {{ authorization }}'
+    force_basic_auth: yes
+    validate_certs: false
+    status_code: [200, 404]
+  register: role_response
+  loop: "{{ pc_user_list }}"
+  loop_control:
+    label: "{{ item[1] }} RDP Users"
+
+- name: Create User Role if it doesn't exist
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}/api/v1/configuration/users/user-roles"
+    method: POST
+    force_basic_auth: yes
+    headers:
+      Accept: "application/json"
+      Authorization: 'Basic {{ authorization }}'
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      name: "{{ item[1] }} RDP Users"
+      description: "RDP Users role for {{ item[1] }}"
+      enabled: true
+    status_code: 201
+    validate_certs: false
+  loop: "{{ pc_user_list }}"
+  loop_control:
+    label: "{{ item[1] }} RDP Users"
+  when: role_response.results | selectattr('item.1', 'equalto', item[1]) | map(attribute='status') | first == 404
+
+- name: Configure Role Mapping for Secureauth_SAML_Remote
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}/api/v1/configuration/users/user-realms/Secureauth_SAML_Remote/role-mapping-rules"
+    method: POST
+    force_basic_auth: yes
+    headers:
+      Accept: "application/json"
+      Authorization: 'Basic {{ authorization }}'
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      name: "{{ item[1] }} RDP Mapping"
+      conditions:
+        - type: "simple"
+          attribute: "username"
+          operator: "is"
+          value: "{{ item[1] }}"
+      roles:
+        - "{{ item[1] }} RDP Users"
+      stop: false
+    status_code: 201
+    validate_certs: false
+  loop: "{{ pc_user_list }}"
+  loop_control:
+    label: "{{ item[1] }} RDP Mapping"
+
 - name: Check if the resource profile exists
   ansible.builtin.uri:
     url: "https://{{ ansible_host }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ item[0] }}"
@@ -34,91 +95,76 @@
   loop_control:
     label: "{{ item[0] }}"
 
-- name: Debug profiles_response
-  ansible.builtin.debug:
-    var: profiles_response.results
+- name: Create Terminal Service Profile and Assign User Role
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile"
+    method: POST
+    force_basic_auth: yes
+    headers:
+      Accept: "application/json"
+      Authorization: 'Basic {{ authorization }}'
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      name: "{{ item[0] }}"
+      roles:
+        - "{{ item[1] }} RDP Users"
+      wts:
+        host: "{{ item[0] }}.{{ domain }}"
+        sessions:
+          session:
+            - alias-name: ""
+              allow-clipboard: "false"
+              application-path: ""
+              apply: "all"
+              auto-launch: "false"
+              color-depth: "32bit"
+              connect-comports: "false"
+              connect-drives: "false"
+              connect-printers: "true"
+              connect-smartcards: "false"
+              description: ""
+              disable-nla: "false"
+              experience-options:
+                bitmap-caching: "false"
+                desktop-background: "false"
+                desktop-composition: "false"
+                font-smoothing: "false"
+                menu-window-animation: "false"
+                show-content-dragging: "false"
+                themes: "false"
+              host: "{{ item[0] }}.{{ domain }}"
+              launch-seamless: "false"
+              microphone-option: "false"
+              multi-mon: "true"
+              name: "{{ item[0] }}"
+              password-type: "variable"
+              path-dir: ""
+              port: "3389"
+              roles: null
+              screen-size: "fullscreen"
+              smartcard-nla: "disabled"
+              sound-options: "bring-to-local"
+              username: "CORPORATE\\{{ item[1] }}"
+              variable-password: ""
+    status_code: 201
+    validate_certs: false
+  register: create_response
+  loop: "{{ pc_user_list }}"
+  loop_control:
+    label: "{{ item[0] }} - {{ item[1] }}"
+  when: profiles_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='status') | first == 404
 
-- name: Iterate over pc_user_list to create resource profiles
-  block:
-    - name: Create Terminal Service Profile and Assign User Role
-      ansible.builtin.uri:
-        url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile"
-        method: POST
-        force_basic_auth: yes
-        headers:
-          Accept: "application/json"
-          Authorization: 'Basic {{ authorization }}'
-          Content-Type: "application/json"
-        body_format: json
-        body:
-          name: "{{ item[0] }}"
-          roles:
-            - "{{ item[1] }} RDP Users"
-          wts:
-            host: "{{ item[0] }}.{{ domain }}"
-            sessions:
-              session:
-                - alias-name: ""
-                  allow-clipboard: "false"
-                  application-path: ""
-                  apply: "all"
-                  auto-launch: "false"
-                  color-depth: "32bit"
-                  connect-comports: "false"
-                  connect-drives: "false"
-                  connect-printers: "true"
-                  connect-smartcards: "false"
-                  description: ""
-                  disable-nla: "false"
-                  experience-options:
-                    bitmap-caching: "false"
-                    desktop-background: "false"
-                    desktop-composition: "false"
-                    font-smoothing: "false"
-                    menu-window-animation: "false"
-                    show-content-dragging: "false"
-                    themes: "false"
-                  host: "{{ item[0] }}.{{ domain }}"
-                  launch-seamless: "false"
-                  microphone-option: "false"
-                  multi-mon: "true"
-                  name: "{{ item[0] }}"
-                  password-type: "variable"
-                  path-dir: ""
-                  port: "3389"
-                  roles: null
-                  screen-size: "fullscreen"
-                  smartcard-nla: "disabled"
-                  sound-options: "bring-to-local"
-                  username: "CORPORATE\\{{ item[1] }}"
-                  variable-password: ""
-        status_code: 201
-        validate_certs: false
-      register: create_response
-      loop: "{{ pc_user_list }}"
-      loop_control:
-        label: "{{ item[0] }} - {{ item[1] }}"
-      when: profiles_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='status') | first == 404
-
-    - name: Retrieve the profile details
-      ansible.builtin.uri:
-        url: "https://{{ ansible_host }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ item[0] }}"
-        method: GET
-        headers:
-          Authorization: 'Basic {{ authorization }}'
-        force_basic_auth: yes
-        validate_certs: false
-        status_code: [200]
-      loop: "{{ pc_user_list }}"
-      loop_control:
-        label: "{{ item[0] }} - {{ item[1] }}"
-      when: profiles_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='status') | first == 404
-
-  rescue:
-    - name: Handle errors
-      ansible.builtin.debug:
-        msg: "Failed to manage resource profile for {{ item[0] }} and {{ item[1] }}. Error: {{ create_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='msg') | first | default('Unknown error') }}"
-      loop: "{{ pc_user_list }}"
-      loop_control:
-        label: "{{ item[0] }} - {{ item[1] }}"
-      when: create_response.results is defined and create_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='failed') | first | default(false)
+- name: Retrieve the profile details
+  ansible.builtin.uri:
+    url: "https://{{ ansible_host }}/api/v1/configuration/users/resource-profiles/terminal-services-profiles/terminal-services-profile/{{ item[0] }}"
+    method: GET
+    headers:
+      Authorization: 'Basic {{ authorization }}'
+    force_basic_auth: yes
+    validate_certs: false
+    status_code: [200]
+  loop: "{{ pc_user_list }}"
+  loop_control:
+    label: "{{ item[0] }} - {{ item[1] }}"
+  when: profiles_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='status') | first == 404
