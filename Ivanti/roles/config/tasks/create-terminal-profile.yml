@@ -46,6 +46,12 @@
     body_format: json
     body:
       name: "{{ item[1] }} RDP Users"
+      general:
+        overview:
+          access-features:
+            - terminal-services: "true"
+          options:
+            - session-options: "false"
     status_code: 201
     validate_certs: false
   loop: "{{ pc_user_list }}"
@@ -55,7 +61,7 @@
 
 - name: Configure Role Mapping for Secureauth_SAML_Remote
   ansible.builtin.uri:
-    url: "https://{{ ansible_host }}/api/v1/configuration/users/user-realms/realm/Secureauth_SAML_Remote/role-mapping-rules"
+    url: "https://{{ ansible_host }}/api/v1/configuration/users/user-realms/realm/Secureauth_SAML_Remote"
     method: POST
     force_basic_auth: yes
     headers:
@@ -65,11 +71,13 @@
     body_format: json
     body:
       name: "{{ item[1] }} RDP Mapping"
-      conditions:
-        - type: "simple"
-          attribute: "username"
-          operator: "is"
-          value: "{{ item[1] }}"
+      role-mapping-rules:
+        rule:
+          - name: "{{ item[1] }} RDP Users"
+            roles: "{{ item[1] }} RDP Users"
+            user-name:
+              - test: "is"
+                user-names: "{{ item[1] }}"
       roles:
         - "{{ item[1] }} RDP Users"
       stop: false
