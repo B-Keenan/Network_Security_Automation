@@ -78,6 +78,7 @@
   loop: "{{ pc_user_list }}"
   loop_control:
     label: "{{ item[1] }} RDP Mapping"
+  when: role_response.results | selectattr('item.1', 'equalto', item[1]) | map(attribute='status') | first == 404
 
 - name: Check if the resource profile exists
   ansible.builtin.uri:
