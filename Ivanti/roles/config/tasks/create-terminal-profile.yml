@@ -22,7 +22,7 @@
 
 - name: Check if User Role exists
   ansible.builtin.uri:
-    url: "https://{{ ansible_host }}/api/v1/configuration/users/user-roles/{{ item[1] }}%20RDP%20Users"
+    url: "https://{{ ansible_host }}/api/v1/configuration/users/user-roles/user-role/{{ item[1] }}%20RDP%20Users"
     method: GET
     headers:
       Authorization: 'Basic {{ authorization }}'
@@ -36,7 +36,7 @@
 
 - name: Create User Role if it doesn't exist
   ansible.builtin.uri:
-    url: "https://{{ ansible_host }}/api/v1/configuration/users/user-roles"
+    url: "https://{{ ansible_host }}/api/v1/configuration/users/user-roles/user-role"
     method: POST
     force_basic_auth: yes
     headers:
@@ -57,7 +57,7 @@
 
 - name: Configure Role Mapping for Secureauth_SAML_Remote
   ansible.builtin.uri:
-    url: "https://{{ ansible_host }}/api/v1/configuration/users/user-realms/Secureauth_SAML_Remote/role-mapping-rules"
+    url: "https://{{ ansible_host }}/api/v1/configuration/users/user-realms/realm/Secureauth_SAML_Remote/role-mapping-rules"
     method: POST
     force_basic_auth: yes
     headers:
