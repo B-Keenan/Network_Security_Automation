@@ -168,4 +168,4 @@
   loop: "{{ pc_user_list }}"
   loop_control:
     label: "{{ item[0] }} - {{ item[1] }}"
-  when: create_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='status') | first == 201
+  when: profiles_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='status') | first == 404
