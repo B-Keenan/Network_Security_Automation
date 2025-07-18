@@ -61,7 +61,7 @@
 
 - name: Configure Role Mapping for Secureauth_SAML_Remote
   ansible.builtin.uri:
-    url: "https://{{ ansible_host }}/api/v1/configuration/users/user-realms/realm/Secureauth_SAML_Remote"
+    url: "https://{{ ansible_host }}/api/v1/configuration/users/user-realms/realm/Secureauth_SAML_Remote/role-mapping-rules/rule"
     method: POST
     force_basic_auth: yes
     headers:
