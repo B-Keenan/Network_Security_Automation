@@ -170,8 +170,8 @@
       Authorization: 'Basic {{ authorization }}'
     force_basic_auth: yes
     validate_certs: false
-    status_code: [200]
+    status_code: 200
   loop: "{{ pc_user_list }}"
   loop_control:
     label: "{{ item[0] }} - {{ item[1] }}"
-  when: profiles_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='status') | first == 404
+  when: create_response.results | selectattr('item.0', 'equalto', item[0]) | map(attribute='status') | first == 201
