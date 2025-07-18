@@ -70,17 +70,11 @@
       Content-Type: "application/json"
     body_format: json
     body:
-      name: "{{ item[1] }} RDP Mapping"
-      role-mapping-rules:
-        rule:
-          - name: "{{ item[1] }} RDP Users"
-            roles: "{{ item[1] }} RDP Users"
-            user-name:
-              - test: "is"
-                user-names: "{{ item[1] }}"
-      roles:
-        - "{{ item[1] }} RDP Users"
-      stop: false
+      - name: "{{ item[1] }} RDP Users"
+        roles: "{{ item[1] }} RDP Users"
+        user-name:
+          - test: "is"
+            user-names: "{{ item[1] }}"
     status_code: 201
     validate_certs: false
   loop: "{{ pc_user_list }}"
