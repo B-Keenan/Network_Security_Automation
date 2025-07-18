@@ -4,8 +4,8 @@
 # PC0001 ben
 # PC0002 alice
 #
-# Iterate over the list, creating a resource profile and/or User Role for every 2 items, respectively.
-# Custom variables: input_content (refer to above sample data), domain (static)
+# Iterate over the list, creating a resource profile and/or User Role, respectively.
+# Custom variables: input_content (refer to above sample data), domain (static, e.g., example.com)
 ---
 - name: Create pc_user_list from input content
   ansible.builtin.set_fact:
