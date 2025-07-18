@@ -12,14 +12,6 @@
     pc_user_list: "{{ input_content.split('\n')[1:] | map('split', ' ') | list }}"
   when: input_content is defined
 
-- name: Check for duplicate pc_names
-  ansible.builtin.fail:
-    msg: "Duplicate name found: {{ item[0] }}. Each name must be unique."
-  when: (pc_user_list | map('first') | list | unique | length) != (pc_user_list | length)
-  loop: "{{ pc_user_list }}"
-  loop_control:
-    label: "{{ item[0] }}"
-
 - name: Check if User Role exists
   ansible.builtin.uri:
     url: "https://{{ ansible_host }}/api/v1/configuration/users/user-roles/user-role/{{ item[1] }}%20RDP%20Users"
