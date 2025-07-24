@@ -1,30 +1,10 @@
----
 - name: Assert all variables exist
   ansible.builtin.assert:
     that:
       - task_selection is defined
 
-- name: List tasks
-  ansible.builtin.command: "ls roles/config/tasks/."
-  changed_when: false
-  register: dir_out
-
-- name: Parse additional_arguments to json
-  when:
-    - additional_arguments is defined
-  ansible.builtin.set_fact:
-    additional_arguments_json: "{{ additional_arguments | cf_convert_to_dict }}"
-
-- name: Include Swiss Armyknife files when in task_selection
-  when:
-    - additional_arguments is not defined or (additional_arguments is defined and not additional_arguments_json.failure)
-    - task_file != 'main.yml'
-    - task_file | regex_search('\.yml$')
-    - task_file | split('.') | first in task_selection | default([])
-  ansible.builtin.include_tasks: "{{ task_file }}"
-  vars:
-    additional_arguments_task: "{{ additional_arguments_json.result[task_file | split('.') | first] | default('') }}"
+- name: Include selected task files in order
+  ansible.builtin.include_tasks: "roles/config/tasks/{{ task_file }}.yml"
+  loop: "{{ task_selection }}"
   loop_control:
     loop_var: task_file
-  with_items:
-    - "{{ dir_out.stdout_lines }}"
