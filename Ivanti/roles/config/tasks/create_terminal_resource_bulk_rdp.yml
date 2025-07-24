@@ -13,7 +13,7 @@
   vars:
     user_realm: "Secureauth_SAML_Remote"
     ad_group: "CORPORATE"
-    domain: example.com
+    domain: "example.com"
   when: input_content is defined
 
 - name: Check if User Role exists
