@@ -5,15 +5,11 @@
 # PC0002 alice
 #
 # Iterate over the list, creating a resource profile and/or User Role, respectively.
-# Custom variables: additional_arguments (refer to above sample data), domain (static, e.g., example.com)
+# Custom variables: additional_arguments (refer to above sample data)
 ---
 - name: Create pc_user_list from input content
   ansible.builtin.set_fact:
     pc_user_list: "{{ additional_arguments.split('\n')[1:] | map('split', ' ') | list }}"
-  vars:
-    user_realm: "Secureauth_SAML_Remote"
-    ad_group: "CORPORATE"
-    domain: "example.com"
   when: additional_arguments is defined
 
 - name: Check if User Role exists
@@ -57,7 +53,7 @@
 
 - name: Configure Role Mapping for Secureauth_SAML_Remote
   ansible.builtin.uri:
-    url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/user-realms/realm/{{ user_realm }}/role-mapping-rules/rule"
+    url: "https://{{ ansible_host }}:{{ device_https_port }}/api/v1/configuration/users/user-realms/realm/Secureauth_SAML_Remote/role-mapping-rules/rule"
     method: POST
     force_basic_auth: yes
     headers:
@@ -107,7 +103,7 @@
       roles:
         - "{{ item[1] }} RDP Users"
       wts:
-        host: "{{ item[0] }}.{{ domain }}"
+        host: "{{ item[0] }}.example.com"
         sessions:
           session:
             - alias-name: ""
@@ -130,7 +126,7 @@
                 menu-window-animation: "false"
                 show-content-dragging: "false"
                 themes: "false"
-              host: "{{ item[0] }}.{{ domain }}"
+              host: "{{ item[0] }}.example.com"
               launch-seamless: "false"
               microphone-option: "false"
               multi-mon: "true"
@@ -142,7 +138,7 @@
               screen-size: "fullscreen"
               smartcard-nla: "disabled"
               sound-options: "bring-to-local"
-              username: "{{ ad_group }}\\{{ item[1] }}"
+              username: "CORPORATE\\{{ item[1] }}"
               variable-password: ""
     status_code: 201
     validate_certs: false
