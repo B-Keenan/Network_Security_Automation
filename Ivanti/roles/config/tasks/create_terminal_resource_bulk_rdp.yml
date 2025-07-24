@@ -1,20 +1,20 @@
 # Create a terminal service resource profile and assign to a User Role.
-# Retrieve contents, e.g.
+# Paste contents, e.g.
 # Hostname User ID
 # PC0001 ben
 # PC0002 alice
 #
 # Iterate over the list, creating a resource profile and/or User Role, respectively.
-# Custom variables: input_content (refer to above sample data), domain (static, e.g., example.com)
+# Custom variables: additional_arguments (refer to above sample data), domain (static, e.g., example.com)
 ---
 - name: Create pc_user_list from input content
   ansible.builtin.set_fact:
-    pc_user_list: "{{ input_content.split('\n')[1:] | map('split', ' ') | list }}"
+    pc_user_list: "{{ additional_arguments.split('\n')[1:] | map('split', ' ') | list }}"
   vars:
     user_realm: "Secureauth_SAML_Remote"
     ad_group: "CORPORATE"
     domain: "example.com"
-  when: input_content is defined
+  when: additional_arguments is defined
 
 - name: Check if User Role exists
   ansible.builtin.uri:
