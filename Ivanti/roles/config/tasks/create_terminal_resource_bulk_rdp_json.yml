@@ -1,16 +1,24 @@
-# Create a terminal service resource profile and assign to a User Role.
-# Retrieve contents, e.g.
-# Hostname User ID
-# PC0001 ben
-# PC0002 alice
-#
-# Iterate over the list, creating a resource profile and/or User Role, respectively.
-# Custom variables: input_content (refer to above sample data), domain (static, e.g., example.com)
----
-- name: Create pc_user_list from input content
+# Sample JSON input:
+#{
+#    "create_terminal_resource_bulk_rdp": {
+#        "domain": "example.com",
+#        "ad_group": "CORPORATE",
+#        "data": {
+#            "PC0001": "ben",
+#            "PC0002": "alice"
+#        }
+#    }
+#}
+- name: Create pc_user_list from JSON input
   ansible.builtin.set_fact:
-    pc_user_list: "{{ input_content.split('\n')[1:] | map('split', ' ') | list }}"
-  when: input_content is defined
+    pc_user_list: "{{ (create_terminal_resource_bulk_rdp.data | type_debug == 'dict') | ternary(
+                      create_terminal_resource_bulk_rdp.data | map('list') | list,
+                      create_terminal_resource_bulk_rdp.data | zip_longest([], [], fillvalue=None) | map('reject', None) | map('list') | list
+                    ) }}"
+  vars:
+    domain: "{{ create_terminal_resource_bulk_rdp.domain }}"
+    ad_group: "{{ create_terminal_resource_bulk_rdp.ad_group }}"
+  when: create_terminal_resource_bulk_rdp is defined
 
 - name: Check if User Role exists
   ansible.builtin.uri:
@@ -103,7 +111,7 @@
       roles:
         - "{{ item[1] }} RDP Users"
       wts:
-        host: "{{ item[0] }}.{{ domain }}"
+        host: "{{ item[0] }}.{{ create_terminal_resource_bulk_rdp.domain }}"
         sessions:
           session:
             - alias-name: ""
@@ -126,7 +134,7 @@
                 menu-window-animation: "false"
                 show-content-dragging: "false"
                 themes: "false"
-              host: "{{ item[0] }}.{{ domain }}"
+              host: "{{ item[0] }}.{{ create_terminal_resource_bulk_rdp.domain }}"
               launch-seamless: "false"
               microphone-option: "false"
               multi-mon: "true"
@@ -138,7 +146,7 @@
               screen-size: "fullscreen"
               smartcard-nla: "disabled"
               sound-options: "bring-to-local"
-              username: "CORPORATE\\{{ item[1] }}"
+              username: "{{ create_terminal_resource_bulk_rdp.ad_group }}\\{{ item[1] }}"
               variable-password: ""
     status_code: 201
     validate_certs: false
