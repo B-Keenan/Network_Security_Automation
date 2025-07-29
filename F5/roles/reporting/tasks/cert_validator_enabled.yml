@@ -1,0 +1,30 @@
+- name: List cert-validator configuration
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list sys crypto recursive cert-validator'"
+    provider: "{{ provider }}"
+  register: cert_validator_config
+
+- name: Check if cert-validator is enabled
+  set_fact:
+    cert_validator_exists: >-
+      {{
+      '✖' if cert_validator_config.stdout | trim == '' else '✔'
+      }}
+
+- name: Set cert-validator enabled check notes
+  set_fact:
+    cert_validator_notes: >-
+      {{
+      'Cert-validator is enabled' if cert_validator_exists == '✔'
+      else 'Cert-validator is not enabled'
+      }}
+
+- name: Append cert-validator enabled check to results
+  set_fact:
+    check_results: "{{ check_results + [{
+      'check_category': 'SSL/TLS Security',
+      'check_item': 'Cert-validator is enabled',
+      'status': cert_validator_exists,
+      'notes': cert_validator_notes
+      }] }}"

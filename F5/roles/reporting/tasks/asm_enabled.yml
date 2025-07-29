@@ -1,0 +1,41 @@
+- name: List ASM provisioning status
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - list sys provision asm
+    provider: "{{ provider }}"
+  register: asm_provision_result
+
+- name: Set ASM provisioned fact
+  set_fact:
+    asm_provisioned: "{{ 'true' if 'level' in asm_provision_result.stdout_lines[0] else 'false' }}"
+ 
+- name: List all virtual servers with destination and policies
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list ltm virtual recursive destination policies'"
+    provider: "{{ provider }}"
+  register: vs_list
+  when: asm_provisioned | bool
+
+- name: Parse virtual servers for HTTPS and ASM policy status
+  set_fact:
+    vs_asm_status: "{{ vs_asm_status | default([]) + [item] }}"
+  loop: "{{ vs_list.stdout_lines | parse_vs_output }}"
+  when: asm_provisioned | bool
+
+- name: Set ASM check facts
+  set_fact:
+    asm_check_status: "{{ '✔' if asm_provisioned | bool and (vs_asm_status | selectattr('destination', 'endswith', ':https') | selectattr('asm_policy', 'equalto', 'none') | list | length) == 0 else '✖' }}"
+    asm_check_notes: >-
+      {{ 'ASM isn''t provisioned' if not asm_provisioned | bool else
+          ('All HTTPS virtual servers have ASM policies' if (vs_asm_status | selectattr('destination', 'endswith', ':https') | selectattr('asm_policy', 'equalto', 'none') | list | length) == 0 else
+          'HTTPS virtual servers without ASM policies: ' + (vs_asm_status | selectattr('destination', 'endswith', ':https') | selectattr('asm_policy', 'equalto', 'none') | map(attribute='name') | list | join(', '))) }}
+
+- name: Append ASM check to results
+  set_fact:
+    check_results: "{{ check_results + [{
+      'check_category': 'ASM Configuration',
+      'check_item': 'ASM Provisioning and HTTPS Policy',
+      'status': asm_check_status,
+      'notes': asm_check_notes
+      }] }}"

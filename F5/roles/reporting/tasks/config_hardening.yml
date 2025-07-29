@@ -1,36 +1,45 @@
 # Custom vars - excel_report: "./f5_report.xlsx", check_results: []
 - name: Include mgmt_acl task
-  ansible.builtin.include_tasks: mgmt_acl.yml
+  ansible.builtin.import_tasks: mgmt_acl.yml
 
 - name: Include mgmt_services task
-  ansible.builtin.include_tasks: mgmt_services.yml
+  ansible.builtin.import_tasks: mgmt_services.yml
 
 - name: Include ntp_config task
-  ansible.builtin.include_tasks: ntp_config.yml
+  ansible.builtin.import_tasks: ntp_config.yml
 
 - name: Include dns_config task
-  ansible.builtin.include_tasks: dns_config.yml
+  ansible.builtin.import_tasks: dns_config.yml
 
 - name: Include syslog_config task
-  ansible.builtin.include_tasks: syslog_config.yml
+  ansible.builtin.import_tasks: syslog_config.yml
 
 - name: Include password_policy task
-  ansible.builtin.include_tasks: password_policy.yml
+  ansible.builtin.import_tasks: password_policy.yml
 
 - name: Include rbac_settings task
-  ansible.builtin.include_tasks: rbac_settings.yml
+  ansible.builtin.import_tasks: rbac_settings.yml
 
 - name: Include remote_auth task
-  ansible.builtin.include_tasks: remote_auth.yml
+  ansible.builtin.import_tasks: remote_auth.yml
 
 - name: Include fallback_to_local task
-  ansible.builtin.include_tasks: fallback_to_local.yml
+  ansible.builtin.import_tasks: fallback_to_local.yml
 
 - name: Include clientssl_options task
-  ansible.builtin.include_tasks: clientssl_options.yml
+  ansible.builtin.import_tasks: clientssl_options.yml
 
 - name: Include clientssl_ciphers task
-  ansible.builtin.include_tasks: clientssl_ciphers.yml
+  ansible.builtin.import_tasks: clientssl_ciphers.yml
+
+- name: Include cert_key_size task
+  ansible.builtin.import_tasks: cert_key_size.yml
+
+- name: Include cert_validator_enabled task
+  ansible.builtin.import_tasks: cert_validator_enabled.yml
+
+- name: Include asm_enabled task
+  ansible.builtin.import_tasks: asm_enabled.yml
 
 - name: Calculate summary metrics
   set_fact:

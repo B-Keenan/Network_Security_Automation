@@ -1,0 +1,39 @@
+# The goal of this task list is to check the SSL certificate validity and trust status on an F5 device. A bit challenging due to private CA issuers (can add them into the empty list below), and a monitoring solution would alert on certificate expiration anyway, which makes this less valuable.
+# Not included in the config_hardening.yml file.
+- name: List all SSL certificates
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list sys crypto recursive cert'"
+    provider: "{{ provider }}"
+  register: cert_list
+
+- name: Parse certificate details for validity and issuer
+  set_fact:
+    cert_details: "{{ cert_list.stdout_lines | select('match', '^sys crypto cert') | map('regex_replace', '^sys crypto cert (\\S+).*expiration\\s+(\\S+\\s+\\d+\\s+\\d+:\\d+:\\d+\\s+\\d+).*issuer\\s+(.+)$', '\\1|\\2|\\3') | list }}"
+
+- name: Check certificate validity and trust
+  set_fact:
+    cert_status: "{{ cert_status | default([]) + [item | regex_replace('^(.*)\\|(.*)\\|(.*)$', |-
+      {
+        'name': '\\1',
+        'expired': (ansible_date_time.iso8601 > ('\\2' | to_datetime('%b %d %H:%M:%S %Y')) | string),
+        'issuer': '\\3',
+        'trusted': ('\\3' in trusted_ca_issuers | default(device_ca_bundle_issuers, true)) | string
+      } ) | from_json ] }}"
+  loop: "{{ cert_details }}"
+  vars:
+    device_ca_bundle_issuers: "{{ (lookup('file', '/Common/ca-bundle.crt', errors='ignore') | default('')) | regex_findall('Issuer: (.*?)\n') }}"
+    trusted_ca_issuers: "{{ trusted_ca_issuers | default([]) }}"  # User-defined list of trusted CA issuers (optional)
+
+- name: Generate certificate check notes
+  set_fact:
+    cert_notes: "{{ cert_status | map(attribute='name') | zip(cert_status | map(attribute='expired') | map('ternary', 'Certificate is expired', 'Certificate is valid')) | zip(cert_status | map(attribute='trusted') | map('ternary', 'Issuer is trusted', 'Issuer not in trusted CA bundle')) | map('join', ': ') | list }}"
+
+- name: Append certificate checks to results
+  set_fact:
+    check_results: "{{ check_results + [{
+      'check_category': 'SSL/TLS Security',
+      'check_item': 'SSL Certificate Validity and Trust',
+      'status': '✔' if (cert_status | selectattr('expired', 'equalto', 'false') | length) == (cert_status | length) and (cert_status | selectattr('trusted', 'equalto', 'true') | length) == (cert_status | length) else '✖',
+      'notes': cert_notes | join('; ')
+      }] }}"
