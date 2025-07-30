@@ -21,7 +21,7 @@
   set_fact:
     asm_pol_mode: >-
       {{
-      '✔' if asm_provisioned | bool and asm_pol_status.stdout is defined and asm_pol_status.stdout | length > 0 and asm_pol_status.stdout | regex_search('active\\s+blocking-mode\\s+disabled') is none
+      '✔' if asm_provisioned | bool and asm_pol_status.stdout is defined and asm_pol_status.stdout | length > 0 and (asm_pol_status.stdout | regex_search('active\\s+blocking-mode\\s+disabled', multiline=True)) is none
       else '✖'
       }}
 
