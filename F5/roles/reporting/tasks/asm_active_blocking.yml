@@ -17,11 +17,15 @@
   register: asm_pol_status
   when: asm_provisioned | bool
 
+- name: Normalize stdout
+  set_fact:
+    normalized_stdout: "{{ asm_pol_status.stdout | join('\n') | regex_replace('\\n\\s+', '\\n') }}"
+
 - name: Check if all active ASM policies have blocking-mode enabled
   set_fact:
     asm_pol_mode: >-
       {{
-      '✔' if asm_provisioned | bool and asm_pol_status.stdout is defined and asm_pol_status.stdout | length > 0 and not (asm_pol_status.stdout_lines | join('\n') | split('}') | select('match', '.*active.*blocking-mode\\s+disabled.*') | list)
+      '✔' if asm_provisioned | bool and normalized_stdout.stdout is defined and normalized_stdout.stdout | length > 0 and normalized_stdout.stdout | regex_search('active\\s+blocking-mode\\s+disabled') is none
       else '✖'
       }}
 
