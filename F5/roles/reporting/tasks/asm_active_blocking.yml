@@ -21,7 +21,7 @@
   set_fact:
     asm_pol_mode: >-
       {{
-      '✔' if asm_provisioned | bool and asm_pol_status.stdout is defined and asm_pol_status.stdout | length > 0 and not (asm_pol_status.stdout_lines | select('match', '.*active.*blocking-mode\\s+disabled.*') | list)
+      '✔' if asm_provisioned | bool and asm_pol_status.stdout is defined and asm_pol_status.stdout | length > 0 and not (asm_pol_status.stdout_lines | join('\n') | split('}') | select('match', '.*active.*blocking-mode\\s+disabled.*') | list)
       else '✖'
       }}
 
