@@ -9,7 +9,7 @@
   set_fact:
     cert_validator_exists: >-
       {{
-      '✖' if cert_validator_config.stdout | trim == '' else '✔'
+      '✖' if cert_validator_config.stdout | trim == [] else '✔'
       }}
 
 - name: Set cert-validator enabled check notes
