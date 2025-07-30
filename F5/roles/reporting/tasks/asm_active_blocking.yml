@@ -7,7 +7,7 @@
 
 - name: Set ASM provisioned fact
   set_fact:
-    asm_provisioned: "{{ 'true' if 'level' in asm_provision_result.stdout_lines[0] else 'false' }}"
+    asm_provisioned: "{{ 'true' if 'level' in asm_provision_result.stdout else 'false' }}"
  
 - name: List ASM policies that are enabled and their enforcement mode
   f5networks.f5_modules.bigip_command:
