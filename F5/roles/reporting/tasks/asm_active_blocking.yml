@@ -1,0 +1,43 @@
+- name: List ASM provisioning status
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - list sys provision asm
+    provider: "{{ provider }}"
+  register: asm_provision_result
+
+- name: Set ASM provisioned fact
+  set_fact:
+    asm_provisioned: "{{ 'true' if 'level' in asm_provision_result.stdout_lines[0] else 'false' }}"
+ 
+- name: List ASM policies that are enabled and their enforcement mode
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - list asm policy blocking-mode active inactive
+    provider: "{{ provider }}"
+  register: asm_pol_status
+  when: asm_provisioned | bool
+
+- name: Check if all active ASM policies have blocking-mode disabled
+  set_fact:
+    asm_pol_mode: >-
+      {{
+      '✔' if asm_provisioned | bool and if asm_pol_status.stdout | length > 0 and asm_pol_status.stdout | regex_search('active\\s+blocking-mode disabled') is none
+      else '✖'
+      }}
+
+- name: Set ASM enabled check notes
+  set_fact:
+    asm_pol_notes: >-
+      {{
+      'ASM is provisioned and all active ASM policies have blocking-mode enabled' if asm_pol_mode == '✔'
+      else 'ASM is not provisioned or one or more active ASM policies have blocking-mode enabled or no active policies found'
+      }}
+
+- name: Append ASM enabled check to results
+  set_fact: 
+    check_results: "{{ check_results + [{
+      'check_category': 'Virtual Servers & App Security',
+      'check_item': 'ASM/WAF policies applied and enforced',
+      'status': asm_pol_mode,
+      'notes': asm_pol_notes
+      }] }}"

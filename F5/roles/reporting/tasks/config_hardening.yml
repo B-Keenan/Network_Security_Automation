@@ -38,8 +38,8 @@
 - name: Include cert_validator_enabled task
   ansible.builtin.import_tasks: cert_validator_enabled.yml
 
-- name: Include asm_enabled task
-  ansible.builtin.import_tasks: asm_enabled.yml
+- name: Include asm_active_blocking task
+  ansible.builtin.import_tasks: asm_active_blocking.yml
 
 - name: Calculate summary metrics
   set_fact:
