@@ -7,7 +7,7 @@
 
 - name: Set ASM provisioned fact
   set_fact:
-    asm_provisioned: "{{ 'true' if 'level' in asm_provision_result.stdout_lines else 'false' }}"
+    asm_provisioned: "{{ 'true' if asm_provision_result.stdout | regex_search('level\\s+nominal') else 'false' }}"
  
 - name: List ASM policies that are enabled and their enforcement mode
   f5networks.f5_modules.bigip_command:
@@ -21,7 +21,7 @@
   set_fact:
     asm_pol_mode: >-
       {{
-      '✔' if asm_provisioned | bool and if asm_pol_status.stdout | length > 0 and asm_pol_status.stdout | regex_search('active\\s+blocking-mode disabled') is none
+      '✔' if asm_provisioned | bool and asm_pol_status.stdout is defined and asm_pol_status.stdout | length > 0 and asm_pol_status.stdout | regex_search('active\\s+blocking-mode\\s+enabled') is none
       else '✖'
       }}
 
@@ -29,7 +29,7 @@
   set_fact:
     asm_pol_notes: >-
       {{
-      'ASM is provisioned and all active ASM policies have blocking-mode enabled' if asm_pol_mode == '✔'
+      'ASM is provisioned and all active ASM policies have blocking-mode disabled' if asm_pol_mode == '✔'
       else 'ASM is not provisioned or one or more active ASM policies have blocking-mode enabled or no active policies found'
       }}
 
