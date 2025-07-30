@@ -9,7 +9,8 @@
   set_fact:
     ssl_key_invalid: >-
       {% set invalid_keys = [] %}
-      {% set output = ssl_key_list.stdout[0] if ssl_key_list.stdout is defined and ssl_key_list.stdout | length > 0 else '' %}
+      {% set output_lines = ssl_key_list.stdout_lines[0] if ssl_key_list.stdout_lines is defined and ssl_key_list.stdout_lines | length > 0 else [] %}
+      {% set output = output_lines | join('\n') %}
       {% if output %}
         {% for key_block in output.split('sys crypto key ') %}
           {% if key_block | trim %}
