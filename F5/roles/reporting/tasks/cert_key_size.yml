@@ -7,7 +7,7 @@
 
 - name: Parse SSL key details
   set_fact:
-    ssl_key_invalid: >-
+    ssl_key_size_check: >-
       {%- set invalid_keys = [] -%}
       {%- set output = ssl_key_list.stdout[0] if ssl_key_list.stdout is defined and ssl_key_list.stdout | length > 0 else '' -%}
       {%- if output -%}
@@ -25,7 +25,7 @@
 
 - name: Set SSL key size check notes
   set_fact:
-    ssl_key_invalid_notes: >-
+    ssl_key_size_notes: >-
       {{
       'SSL keys are valid' if ssl_key_invalid == '✔'
       else 'SSL keys are invalid or insecure (less than 2048 bits or unsupported key type)'
@@ -36,6 +36,6 @@
     check_results: "{{ check_results + [{
       'check_category': 'SSL/TLS Security',
       'check_item': 'SSL keys are valid',
-      'status': ssl_key_invalid,
-      'notes': ssl_key_invalid_notes
+      'status': ssl_key_size_check,
+      'notes': ssl_key_size_notes
       }] }}"
