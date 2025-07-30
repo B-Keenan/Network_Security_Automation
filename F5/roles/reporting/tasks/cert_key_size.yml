@@ -27,7 +27,7 @@
   set_fact:
     ssl_key_size_notes: >-
       {{
-      'SSL keys are valid' if ssl_key_invalid == '✔'
+      'SSL keys are valid' if ssl_key_size_check == '✔'
       else 'SSL keys are invalid or insecure (less than 2048 bits or unsupported key type)'
       }}
 
