@@ -9,7 +9,7 @@
   set_fact:
     ssl_key_invalid: >-
       {{
-      ssl_key_list.stdout[0].split('sys crypto key')
+      ssl_key_list.stdout.split('sys crypto key')
       | map('regex_replace', '^[\\s\\n]*', '')
       | select('search', 'key-size|key-type')
       | map('regex_search', 'key-size (\\d+).*key-type (\\S+)', '\\1,\\2')
@@ -23,7 +23,7 @@
       | count > 0
       or
       (
-        ssl_key_list.stdout[0].split('sys crypto key')
+        ssl_key_list.stdout.split('sys crypto key')
         | map('regex_replace', '^[\\s\\n]*', '')
         | select('search', 'key-size|key-type')
         | map('regex_search', 'key-size (\\d+).*key-type (\\S+)', '\\1,\\2')
