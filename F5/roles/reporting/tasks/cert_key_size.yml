@@ -8,35 +8,17 @@
 - name: Parse SSL key details
   set_fact:
     ssl_key_invalid: >-
-      {{
-      ssl_key_list.stdout.split('sys crypto key')
-      | map('regex_replace', '^[\\s\\n]*', '')
-      | select('search', 'key-size|key-type')
-      | map('regex_search', 'key-size (\\d+).*key-type (\\S+)', '\\1,\\2')
-      | map('split', ',')
-      | selectattr('0', 'defined')
-      | map('extract', [0,1])
-      | map('map', 'trim')
-      | selectattr('0', 'int')
-      | selectattr('0', 'lt', 2048)
-      | list
-      | count > 0
-      or
-      (
-        ssl_key_list.stdout.split('sys crypto key')
-        | map('regex_replace', '^[\\s\\n]*', '')
-        | select('search', 'key-size|key-type')
-        | map('regex_search', 'key-size (\\d+).*key-type (\\S+)', '\\1,\\2')
-        | map('split', ',')
-        | selectattr('1', 'defined')
-        | map('extract', [1])
-        | map('trim')
-        | select('noneof', ['rsa-private', 'ecdsa-private'])
-        | list
-        | count > 0
-      )
-      | ternary('✖', '✔')
-      }}
+      {% set invalid_keys = [] %}
+      {% for key_block in ssl_key_list.stdout[0].split('sys crypto key ') %}
+        {% if key_block | trim %}
+          {% set key_size = (key_block | regex_search('key-size (\\d+)', '\\1') | first | default('0') | int) %}
+          {% set key_type = (key_block | regex_search('key-type (\\S+)', '\\1') | first | default('unknown')) %}
+          {% if key_size < 2048 or key_type not in ['rsa-private', 'ecdsa-private'] %}
+            {% set _ = invalid_keys.append(key_block | regex_search('^(\\S+)', '\\1') | first | default('unknown')) %}
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+      {{ '✖' if invalid_keys | length > 0 else '✔' }}
 
 - name: Set SSL key size check notes
   set_fact:
