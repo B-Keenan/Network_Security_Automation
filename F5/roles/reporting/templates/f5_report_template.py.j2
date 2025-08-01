@@ -25,7 +25,7 @@ summary.add_table(summary_table)
 # Configuration Hardening Sheet
 hardening = wb.create_sheet("Configuration Hardening")
 hardening.append(["Check Category", "Check Item", "Status (✔/✖/N/A)", "Notes"])
-{% for check in check_results %}
+{% for check in hardening_check_results %}
 hardening.append(["{{ check.check_category }}", "{{ check.check_item }}", "{{ check.status }}", "{{ check.notes }}"])
 {% endfor %}
 

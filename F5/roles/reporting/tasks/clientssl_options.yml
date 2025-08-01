@@ -16,7 +16,7 @@
 
 - name: Append clientssl tls options check to results
   set_fact:
-    check_results: "{{ check_results + [{
+    check_results: "{{ hardening_check_results + [{
       'check_category': 'SSL/TLS Security',
       'check_item': 'TLS 1.0 and 1.1 are disabled',
       'status': clientssl_profile_options,

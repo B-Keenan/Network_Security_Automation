@@ -22,7 +22,7 @@
 
 - name: Append cert-validator enabled check to results
   set_fact:
-    check_results: "{{ check_results + [{
+    check_results: "{{ hardening_check_results + [{
       'check_category': 'SSL/TLS Security',
       'check_item': 'Cert-validator is enabled',
       'status': cert_validator_exists,

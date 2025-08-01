@@ -15,4 +15,9 @@
 
 - name: Append management services check to results
   set_fact:
-    check_results: "{{ check_results + [{'check_category': 'Management Access', 'check_item': 'No management services on data plane interfaces', 'status': mgmt_services_status, 'notes': mgmt_services_notes}] }}"
+    check_results: "{{ hardening_check_results + [{
+      'check_category': 'Management Access',
+      'check_item': 'No management services on data plane interfaces',
+      'status': mgmt_services_status,
+      'notes': mgmt_services_notes
+      }] }}"

@@ -16,7 +16,7 @@
 
 - name: Append fallback to local check to results
   set_fact:
-    check_results: "{{ check_results + [{
+    check_results: "{{ hardening_check_results + [{
       'check_category': 'User Accounts & Authentication',
       'check_item': 'Local authentication fallback disabled (if feasible)',
       'status': fallback_to_local_setting,
