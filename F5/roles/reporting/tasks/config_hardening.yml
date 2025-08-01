@@ -56,7 +56,7 @@
 - name: Include asm_liveupdate task
   ansible.builtin.import_tasks: asm_liveupdate.yml
   when: asm_provisioned | bool
-  
+
 - name: Calculate summary metrics
   set_fact:
     total_checks: "{{ check_results | length }}"
@@ -64,6 +64,11 @@
     failed_checks: "{{ check_results | selectattr('status', 'equalto', '✖') | length }}"
     na_checks: "{{ check_results | selectattr('status', 'equalto', 'N/A') | length }}"
     overall_status: "{{ 'Medium Risk' if (check_results | selectattr('status', 'equalto', '✖') | length) > 0 else 'Low Risk' }}"
+    waf_total_checks: "{{ check_results | length }}"
+    waf_passed_checks: "{{ check_results | selectattr('status', 'equalto', '✔') | length }}"
+    waf_failed_checks: "{{ check_results | selectattr('status', 'equalto', '✖') | length }}"
+    waf_na_checks: "{{ check_results | selectattr('status', 'equalto', 'N/A') | length }}"
+    waf_overall_status: "{{ 'Medium Risk' if (check_results | selectattr('status', 'equalto', '✖') | length) > 0 else 'Low Risk' }}"
 
 - name: Ensure openpyxl is installed
   ansible.builtin.pip:
