@@ -1,4 +1,10 @@
-# Custom vars - excel_report: "./f5_report.xlsx", check_results: []
+# Custom vars - excel_report: "./f5_report.xlsx", hardening_check_results: [], waf_check_results: []
+- name: Define vars
+  set_fact:
+    excel_report: "./f5_report.xlsx"
+    hardening_check_results: []
+    waf_check_results: []
+
 - name: Include mgmt_acl task
   ansible.builtin.import_tasks: mgmt_acl.yml
 
@@ -59,11 +65,11 @@
 
 - name: Calculate summary metrics
   set_fact:
-    total_checks: "{{ check_results | length }}"
-    passed_checks: "{{ check_results | selectattr('status', 'equalto', '✔') | length }}"
-    failed_checks: "{{ check_results | selectattr('status', 'equalto', '✖') | length }}"
-    na_checks: "{{ check_results | selectattr('status', 'equalto', 'N/A') | length }}"
-    overall_status: "{{ 'Medium Risk' if (check_results | selectattr('status', 'equalto', '✖') | length) > 0 else 'Low Risk' }}"
+    hardening_total_checks: "{{ check_results | length }}"
+    hardening_passed_checks: "{{ check_results | selectattr('status', 'equalto', '✔') | length }}"
+    hardening_failed_checks: "{{ check_results | selectattr('status', 'equalto', '✖') | length }}"
+    hardening_na_checks: "{{ check_results | selectattr('status', 'equalto', 'N/A') | length }}"
+    hardening_overall_status: "{{ 'Medium Risk' if (check_results | selectattr('status', 'equalto', '✖') | length) > 0 else 'Low Risk' }}"
     waf_total_checks: "{{ check_results | length }}"
     waf_passed_checks: "{{ check_results | selectattr('status', 'equalto', '✔') | length }}"
     waf_failed_checks: "{{ check_results | selectattr('status', 'equalto', '✖') | length }}"
