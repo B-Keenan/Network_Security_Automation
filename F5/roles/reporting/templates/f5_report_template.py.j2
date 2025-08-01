@@ -9,6 +9,7 @@ wb.remove(wb.active)  # Remove default sheet
 summary = wb.create_sheet("Executive Summary")
 summary.append(["Category", "Total Checks", "Passed", "Failed", "N/A", "Overall Status"])
 summary.append(["Configuration Hardening", {{ total_checks }}, {{ passed_checks }}, {{ failed_checks }}, {{ na_checks }}, "{{ overall_status }}"])
+summary.append(["WAF Policy Management", {{ total_checks }}, {{ passed_checks }}, {{ failed_checks }}, {{ na_checks }}, "{{ overall_status }}"])
 
 # Styling for Executive Summary
 for cell in summary[1]:
@@ -39,8 +40,26 @@ hardening_table = Table(displayName="HardeningTable", ref="A1:D{{ check_results 
 hardening_table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
 hardening.add_table(hardening_table)
 
+# WAF Policy Management Sheet
+waf_policy = wb.create_sheet("WAF Policy Management")
+waf_policy.append(["Check Category", "Check Item", "Status (✔/✖/N/A)", "Notes"])
+{% for check in check_results %}
+waf_policy.append(["{{ check.check_category }}", "{{ check.check_item }}", "{{ check.status }}", "{{ check.notes }}"])
+{% endfor %}
+
+# Styling for WAF Policy Management
+for cell in waf_policy[1]:
+    cell.font = Font(bold=True)
+    cell.fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+    cell.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+
+waf_policy_table = Table(displayName="WAFPolicyManagementTable", ref="A1:D{{ check_results | length + 1 }}")
+waf_policy_table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
+waf_policy.add_table(waf_policy_table)
+
 # Adjust column widths
-for sheet in [summary, hardening]:
+for sheet in [summary, hardening, waf_policy]:
     for col in sheet.columns:
         max_length = 0
         column = col[0].column_letter
