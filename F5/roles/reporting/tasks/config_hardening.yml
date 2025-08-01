@@ -38,9 +38,25 @@
 - name: Include cert_validator_enabled task
   ansible.builtin.import_tasks: cert_validator_enabled.yml
 
+- name: List ASM provisioning status
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - list sys provision asm
+    provider: "{{ provider }}"
+  register: asm_provision_result
+
+- name: Set ASM provisioned fact
+  set_fact:
+    asm_provisioned: "{{ 'true' if asm_provision_result.stdout | regex_search('level\\s+nominal') else 'false' }}"
+    
 - name: Include asm_active_blocking task
   ansible.builtin.import_tasks: asm_active_blocking.yml
+  when: asm_provisioned | bool
 
+- name: Include asm_liveupdate task
+  ansible.builtin.import_tasks: asm_liveupdate.yml
+  when: asm_provisioned | bool
+  
 - name: Calculate summary metrics
   set_fact:
     total_checks: "{{ check_results | length }}"

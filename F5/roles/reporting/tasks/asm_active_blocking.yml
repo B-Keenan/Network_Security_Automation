@@ -1,21 +1,9 @@
-- name: List ASM provisioning status
-  f5networks.f5_modules.bigip_command:
-    commands:
-      - list sys provision asm
-    provider: "{{ provider }}"
-  register: asm_provision_result
-
-- name: Set ASM provisioned fact
-  set_fact:
-    asm_provisioned: "{{ 'true' if asm_provision_result.stdout | regex_search('level\\s+nominal') else 'false' }}"
-
 - name: List ASM policies that are enabled and their enforcement mode
   f5networks.f5_modules.bigip_command:
     commands:
       - list asm policy blocking-mode active inactive
     provider: "{{ provider }}"
   register: asm_pol_status
-  when: asm_provisioned | bool
 
 - name: Normalize stdout
   set_fact:
@@ -25,7 +13,7 @@
   set_fact:
     asm_pol_mode: >-
       {{
-      '✔' if asm_provisioned | bool and normalized_stdout.stdout is defined and normalized_stdout.stdout | length > 0 and normalized_stdout.stdout | regex_search('active\\s+blocking-mode\\s+disabled') is none
+      '✔' if normalized_stdout.stdout is defined and normalized_stdout.stdout | length > 0 and normalized_stdout.stdout | regex_search('active\\s+blocking-mode\\s+disabled') is none
       else '✖'
       }}
 
@@ -33,8 +21,8 @@
   set_fact:
     asm_pol_notes: >-
       {{
-      'ASM is provisioned and all active ASM policies have blocking-mode enabled' if asm_pol_mode == '✔'
-      else 'ASM is not provisioned or one or more active ASM policies have blocking-mode disabled or no active policies found'
+      'All active ASM policies have blocking-mode enabled' if asm_pol_mode == '✔'
+      else 'One or more active ASM policies have blocking-mode disabled or no active policies found'
       }}
 
 - name: Append ASM enabled check to results

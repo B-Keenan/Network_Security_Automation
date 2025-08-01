@@ -1,0 +1,6 @@
+- name: Gather ts subset
+  f5networks.f5_modules.bigip_device_info:
+    gather_subset:
+      - ts
+    provider: "{{ provider }}"
+  register: ts_info
