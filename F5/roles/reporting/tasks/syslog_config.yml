@@ -16,7 +16,7 @@
 
 - name: Append DNS configuration check to results
   set_fact:
-    check_results: "{{ hardening_check_results + [{
+    hardening_check_results: "{{ hardening_check_results + [{
       'check_category': 'Logging & Auditing',
       'check_item': 'Syslog uses internal servers',
       'status': syslog_servers_status,

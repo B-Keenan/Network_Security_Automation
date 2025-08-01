@@ -65,16 +65,16 @@
 
 - name: Calculate summary metrics
   set_fact:
-    hardening_total_checks: "{{ check_results | length }}"
-    hardening_passed_checks: "{{ check_results | selectattr('status', 'equalto', '✔') | length }}"
-    hardening_failed_checks: "{{ check_results | selectattr('status', 'equalto', '✖') | length }}"
-    hardening_na_checks: "{{ check_results | selectattr('status', 'equalto', 'N/A') | length }}"
-    hardening_overall_status: "{{ 'Medium Risk' if (check_results | selectattr('status', 'equalto', '✖') | length) > 0 else 'Low Risk' }}"
-    waf_total_checks: "{{ check_results | length }}"
-    waf_passed_checks: "{{ check_results | selectattr('status', 'equalto', '✔') | length }}"
-    waf_failed_checks: "{{ check_results | selectattr('status', 'equalto', '✖') | length }}"
-    waf_na_checks: "{{ check_results | selectattr('status', 'equalto', 'N/A') | length }}"
-    waf_overall_status: "{{ 'Medium Risk' if (check_results | selectattr('status', 'equalto', '✖') | length) > 0 else 'Low Risk' }}"
+    hardening_total_checks: "{{ hardening_check_results | length }}"
+    hardening_passed_checks: "{{ hardening_check_results | selectattr('status', 'equalto', '✔') | length }}"
+    hardening_failed_checks: "{{ hardening_check_results | selectattr('status', 'equalto', '✖') | length }}"
+    hardening_na_checks: "{{ hardening_check_results | selectattr('status', 'equalto', 'N/A') | length }}"
+    hardening_overall_status: "{{ 'Medium Risk' if (hardening_check_results | selectattr('status', 'equalto', '✖') | length) > 0 else 'Low Risk' }}"
+    waf_total_checks: "{{ waf_check_results | length }}"
+    waf_passed_checks: "{{ waf_check_results | selectattr('status', 'equalto', '✔') | length }}"
+    waf_failed_checks: "{{ waf_check_results | selectattr('status', 'equalto', '✖') | length }}"
+    waf_na_checks: "{{ waf_check_results | selectattr('status', 'equalto', 'N/A') | length }}"
+    waf_overall_status: "{{ 'Medium Risk' if (waf_check_results | selectattr('status', 'equalto', '✖') | length) > 0 else 'Low Risk' }}"
 
 - name: Ensure openpyxl is installed
   ansible.builtin.pip:

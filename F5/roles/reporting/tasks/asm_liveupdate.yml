@@ -1,6 +1,9 @@
 - name: Gather ts subset
   f5networks.f5_modules.bigip_device_info:
     gather_subset:
-      - ts
+      - asm-policy-stats
+      - asm-policies
+      - asm-server-technologies
+      - asm-signature-sets
     provider: "{{ provider }}"
-  register: ts_info
+  register: asm_info

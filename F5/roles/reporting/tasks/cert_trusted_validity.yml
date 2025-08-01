@@ -31,7 +31,7 @@
 
 - name: Append certificate checks to results
   set_fact:
-    check_results: "{{ hardening_check_results + [{
+    hardening_check_results: "{{ hardening_check_results + [{
       'check_category': 'SSL/TLS Security',
       'check_item': 'SSL Certificate Validity and Trust',
       'status': '✔' if (cert_status | selectattr('expired', 'equalto', 'false') | length) == (cert_status | length) and (cert_status | selectattr('trusted', 'equalto', 'true') | length) == (cert_status | length) else '✖',

@@ -33,7 +33,7 @@
 
 - name: Append SSL key size check to results
   set_fact: 
-    check_results: "{{ hardening_check_results + [{
+    hardening_check_results: "{{ hardening_check_results + [{
       'check_category': 'SSL/TLS Security',
       'check_item': 'Certificates use ≥2048-bit RSA or ECDSA keys',
       'status': ssl_key_size_check,

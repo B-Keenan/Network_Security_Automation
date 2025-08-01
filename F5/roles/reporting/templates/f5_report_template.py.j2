@@ -36,7 +36,7 @@ for cell in hardening[1]:
     cell.alignment = Alignment(horizontal="center", vertical="center")
     cell.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
-hardening_table = Table(displayName="HardeningTable", ref="A1:D{{ check_results | length + 1 }}")
+hardening_table = Table(displayName="HardeningTable", ref="A1:D{{ hardening_check_results | length + 1 }}")
 hardening_table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
 hardening.add_table(hardening_table)
 

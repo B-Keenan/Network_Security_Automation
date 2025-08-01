@@ -19,7 +19,7 @@
 
 - name: Append clientssl cipher suites check to results
   set_fact:
-    check_results: "{{ hardening_check_results + [{
+    hardening_check_results: "{{ hardening_check_results + [{
       'check_category': 'SSL/TLS Security',
       'check_item': 'Only secure cipher suites are enabled',
       'status': clientssl_profile_ciphers,

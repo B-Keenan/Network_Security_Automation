@@ -16,7 +16,7 @@
 
 - name: Append remote auth check to results
   set_fact:
-    check_results: "{{ hardening_check_results + [{
+    hardening_check_results: "{{ hardening_check_results + [{
       'check_category': 'User Accounts & Authentication',
       'check_item': 'Remote authentication (LDAP/RADIUS/TACACS+) implemented',
       'status': remote_auth_enabled,

@@ -19,7 +19,7 @@
 
 - name: Append management access check to results
   set_fact:
-    check_results: "{{ hardening_check_results + [{
+    hardening_check_results: "{{ hardening_check_results + [{
       'check_category': 'Management Access',
       'check_item': 'Management interface access is restricted via ACLs',
       'status': mgmt_access_status,

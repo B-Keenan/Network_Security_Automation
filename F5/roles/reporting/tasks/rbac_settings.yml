@@ -24,7 +24,7 @@
 
 - name: Append user role check to results
   set_fact:
-    check_results: "{{ hardening_check_results + [{
+    hardening_check_results: "{{ hardening_check_results + [{
       'check_category': 'User Accounts & Authentication',
       'check_item': 'Role-based access control (RBAC) enforced',
       'status': user_role,
