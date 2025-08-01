@@ -9,7 +9,7 @@ wb.remove(wb.active)  # Remove default sheet
 summary = wb.create_sheet("Executive Summary")
 summary.append(["Category", "Total Checks", "Passed", "Failed", "N/A", "Overall Status"])
 summary.append(["Configuration Hardening", {{ total_checks }}, {{ passed_checks }}, {{ failed_checks }}, {{ na_checks }}, "{{ overall_status }}"])
-summary.append(["WAF Policy Management", {{ total_checks }}, {{ passed_checks }}, {{ failed_checks }}, {{ na_checks }}, "{{ overall_status }}"])
+summary.append(["WAF Policy Management", {{ waf_total_checks }}, {{ waf_passed_checks }}, {{ waf_failed_checks }}, {{ waf_na_checks }}, "{{ waf_overall_status }}"])
 
 # Styling for Executive Summary
 for cell in summary[1]:
@@ -18,7 +18,7 @@ for cell in summary[1]:
     cell.alignment = Alignment(horizontal="center", vertical="center")
     cell.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
-summary_table = Table(displayName="SummaryTable", ref="A1:F2")
+summary_table = Table(displayName="SummaryTable", ref="A1:F3")
 summary_table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
 summary.add_table(summary_table)
 
@@ -43,7 +43,7 @@ hardening.add_table(hardening_table)
 # WAF Policy Management Sheet
 waf_policy = wb.create_sheet("WAF Policy Management")
 waf_policy.append(["Check Category", "Check Item", "Status (✔/✖/N/A)", "Notes"])
-{% for check in check_results %}
+{% for check in waf_check_results %}
 waf_policy.append(["{{ check.check_category }}", "{{ check.check_item }}", "{{ check.status }}", "{{ check.notes }}"])
 {% endfor %}
 
@@ -54,7 +54,7 @@ for cell in waf_policy[1]:
     cell.alignment = Alignment(horizontal="center", vertical="center")
     cell.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
-waf_policy_table = Table(displayName="WAFPolicyManagementTable", ref="A1:D{{ check_results | length + 1 }}")
+waf_policy_table = Table(displayName="WAFPolicyManagementTable", ref="A1:D{{ waf_check_results | length + 1 }}")
 waf_policy_table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
 waf_policy.add_table(waf_policy_table)
 
