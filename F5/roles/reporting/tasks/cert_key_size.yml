@@ -35,7 +35,7 @@
   set_fact: 
     check_results: "{{ check_results + [{
       'check_category': 'SSL/TLS Security',
-      'check_item': 'SSL keys are valid',
+      'check_item': 'Certificates use ≥2048-bit RSA or ECDSA keys',
       'status': ssl_key_size_check,
       'notes': ssl_key_size_notes
       }] }}"
