@@ -78,7 +78,7 @@ waf_policy_table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showR
 waf_policy.add_table(waf_policy_table)
 
 # Adjust column widths
-for sheet in [summary, hardening, waf_policy]:
+for sheet in [summary, hardening, ssl_review, waf_policy]:
     for col in sheet.columns:
         max_length = 0
         column = col[0].column_letter
