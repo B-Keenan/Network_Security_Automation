@@ -28,7 +28,7 @@
 - name: Append ASM enabled check to results
   set_fact: 
     waf_check_results: "{{ waf_check_results + [{
-      'check_category': 'WAF Policy Management',
+      'check_category': 'Policy Configuration',
       'check_item': 'ASM/WAF policies applied and enforced',
       'status': asm_pol_mode,
       'notes': asm_pol_notes

@@ -1,8 +1,8 @@
-# Custom vars - excel_report: "./f5_report.xlsx", hardening_check_results: [], waf_check_results: []
 - name: Define vars
   set_fact:
     excel_report: "./f5_report.xlsx"
     hardening_check_results: []
+    ssl_check_results: []
     waf_check_results: []
 
 - name: Include mgmt_acl task
@@ -63,18 +63,30 @@
   ansible.builtin.import_tasks: asm_liveupdate.yml
   when: asm_provisioned | bool
 
-- name: Calculate summary metrics
+- name: Calculate Hardening summary metrics
   set_fact:
     hardening_total_checks: "{{ hardening_check_results | length }}"
     hardening_passed_checks: "{{ hardening_check_results | selectattr('status', 'equalto', '✔') | length }}"
     hardening_failed_checks: "{{ hardening_check_results | selectattr('status', 'equalto', '✖') | length }}"
     hardening_na_checks: "{{ hardening_check_results | selectattr('status', 'equalto', 'N/A') | length }}"
     hardening_overall_status: "{{ 'Medium Risk' if (hardening_check_results | selectattr('status', 'equalto', '✖') | length) > 0 else 'Low Risk' }}"
+
+- name: Calculate SSL summary metrics
+  set_fact:
+    ssl_total_checks: "{{ ssl_check_results | length }}"
+    ssl_passed_checks: "{{ ssl_check_results | selectattr('status', 'equalto', '✔') | length }}"
+    ssl_failed_checks: "{{ ssl_check_results | selectattr('status', 'equalto', '✖') | length }}"
+    ssl_na_checks: "{{ ssl_check_results | selectattr('status', 'equalto', 'N/A') | length }}"
+    ssl_overall_status: "{{ 'Medium Risk' if (ssl_check_results | selectattr('status', 'equalto', '✖') | length) > 0 else 'Low Risk' }}"
+
+- name: Calculate WAF summary metrics
+  set_fact:
     waf_total_checks: "{{ waf_check_results | length }}"
     waf_passed_checks: "{{ waf_check_results | selectattr('status', 'equalto', '✔') | length }}"
     waf_failed_checks: "{{ waf_check_results | selectattr('status', 'equalto', '✖') | length }}"
     waf_na_checks: "{{ waf_check_results | selectattr('status', 'equalto', 'N/A') | length }}"
     waf_overall_status: "{{ 'Medium Risk' if (waf_check_results | selectattr('status', 'equalto', '✖') | length) > 0 else 'Low Risk' }}"
+  when: asm_provisioned | bool
 
 - name: Ensure openpyxl is installed
   ansible.builtin.pip:

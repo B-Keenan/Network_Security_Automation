@@ -9,6 +9,7 @@ wb.remove(wb.active)  # Remove default sheet
 summary = wb.create_sheet("Executive Summary")
 summary.append(["Category", "Total Checks", "Passed", "Failed", "N/A", "Overall Status"])
 summary.append(["Configuration Hardening", {{ hardening_total_checks }}, {{ hardening_passed_checks }}, {{ hardening_failed_checks }}, {{ hardening_na_checks }}, "{{ hardening_overall_status }}"])
+summary.append(["SSL/TLS Cipher & Profile Review", {{ ssl_total_checks }}, {{ ssl_passed_checks }}, {{ ssl_failed_checks }}, {{ ssl_na_checks }}, "{{ ssl_overall_status }}"])
 summary.append(["WAF Policy Management", {{ waf_total_checks }}, {{ waf_passed_checks }}, {{ waf_failed_checks }}, {{ waf_na_checks }}, "{{ waf_overall_status }}"])
 
 # Styling for Executive Summary
@@ -39,6 +40,24 @@ for cell in hardening[1]:
 hardening_table = Table(displayName="HardeningTable", ref="A1:D{{ hardening_check_results | length + 1 }}")
 hardening_table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
 hardening.add_table(hardening_table)
+
+# SSL/TLS Cipher & Profile Review Sheet
+ssl_review = wb.create_sheet("SSL/TLS Cipher & Profile Review")
+ssl_review.append(["Check Category", "Check Item", "Status (✔/✖/N/A)", "Notes"])
+{% for check in ssl_check_results %}
+ssl_review.append(["{{ check.check_category }}", "{{ check.check_item }}", "{{ check.status }}", "{{ check.notes }}"])
+{% endfor %}
+
+# Styling for SSL/TLS Cipher & Profile Review
+for cell in ssl_review[1]:
+    cell.font = Font(bold=True)
+    cell.fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")
+    cell.alignment = Alignment(horizontal="center", vertical="center")
+    cell.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+
+ssl_review_table = Table(displayName="SSLReviewTable", ref="A1:D{{ ssl_check_results | length + 1 }}")
+ssl_review_table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
+ssl_review.add_table(ssl_review_table)
 
 # WAF Policy Management Sheet
 waf_policy = wb.create_sheet("WAF Policy Management")
