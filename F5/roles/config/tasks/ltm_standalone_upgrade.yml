@@ -14,10 +14,67 @@
     provider: "{{ provider }}"
   register: date
 
+- name: Get current icrd.timeout value
+  f5networks.f5_modules.bigip_sys_db:
+    key: icrd.timeout
+    provider: "{{ provider }}"
+  register: icrd_timeout_result
+
+- name: Set icrd.timeout to 180 if less than 180
+  f5networks.f5_modules.bigip_sys_db:
+    key: icrd.timeout
+    value: "180"
+    provider: "{{ provider }}"
+  when: icrd_timeout_result.value | int < 180
+  register: icrd_timeout_change
+
+- name: Get current restjavad.timeout value
+  f5networks.f5_modules.bigip_sys_db:
+    key: restjavad.timeout
+    provider: "{{ provider }}"
+  register: restjavad_timeout_result
+
+- name: Set restjavad.timeout to 180 if less than 180
+  f5networks.f5_modules.bigip_sys_db:
+    key: restjavad.timeout
+    value: "180"
+    provider: "{{ provider }}"
+  when: restjavad_timeout_result.value | int < 180
+  register: restjavad_timeout_change
+
+- name: Get current restnoded.timeout value
+  f5networks.f5_modules.bigip_sys_db:
+    key: restnoded.timeout
+    provider: "{{ provider }}"
+  register: restnoded_timeout_result
+
+- name: Set restnoded.timeout to 180 if less than 180
+  f5networks.f5_modules.bigip_sys_db:
+    key: restnoded.timeout
+    value: "180"
+    provider: "{{ provider }}"
+  when: restnoded_timeout_result.value | int < 180
+  register: restnoded_timeout_change
+
+- name: Set changed flag for any timeout modifications
+  set_fact:
+    timeout_changed: "{{ icrd_timeout_change.changed or restjavad_timeout_change.changed or restnoded_timeout_change.changed }}"
+
 - name: Save running configuration
   f5networks.f5_modules.bigip_config:
     save: yes
     provider: "{{ provider }}"
+
+- name: Restart restjavad and restnoded services
+  f5networks.f5_modules.bigip_command:
+    commands: restart sys service restjavad restnoded
+    provider: "{{ provider }}"
+  when: timeout_changed | bool
+
+- name: Wait for services to start
+  wait_for:
+    timeout: 30
+  when: timeout_changed | bool
 
 - name: Gather subsets in Common
   f5networks.f5_modules.bigip_device_info:
