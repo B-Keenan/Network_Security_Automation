@@ -14,13 +14,6 @@
     provider: "{{ provider }}"
   register: date
 
-- name: Gather Failover State
-  f5networks.f5_modules.bigip_command:
-    commands:
-      - show sys failover
-    provider: "{{ provider }}"
-  register: failover_state
-
 - name: Save running configuration
   f5networks.f5_modules.bigip_config:
     save: yes
