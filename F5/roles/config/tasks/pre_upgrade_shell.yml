@@ -3,10 +3,6 @@
   ansible_connection: ssh
   run_once: true
   block:
-    - name: Register Partitions
-      shell: tmsh list auth partition | awk '/auth partition/ {print $3}'
-      register: partitions
-
     - name: Register date on BIG-IP
       command: date "+%F"
       register: date

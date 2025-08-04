@@ -5,190 +5,172 @@
 # Custom variables: additional_arguments (AWX Survey textarea)
 # image: BIGIP-17.1.2.2-0.0.12.iso
 ---
-- name: Perform pre-upgrade shell tasks
-  ansible.builtin.import_tasks: pre_upgrade_shell.yml
+#- name: Perform pre-upgrade shell tasks
+  #ansible.builtin.include_tasks: pre_upgrade_shell.yml
+- name: Gather Date
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c 'date "+%F"'
+    provider: "{{ provider }}"
+  register: date
 
-- name: Start F5 BIG-IP TMOS Software Upgrade
-  block:
-  - name: Save running configuration
-    f5networks.f5_modules.bigip_config:
-      save: yes
-      provider: "{{ provider }}"
+- name: Gather Failover State
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - show sys failover
+    provider: "{{ provider }}"
+  register: failover_state
 
-  - name: Gather subsets
+- name: Save running configuration
+  f5networks.f5_modules.bigip_config:
+    save: yes
+    provider: "{{ provider }}"
+
+- name: Gather subsets in Common
+  f5networks.f5_modules.bigip_device_info:
+    gather_subset:
+      - license
+      - partitions
+      - software-volumes
+    provider: "{{ provider }}"
+  register: device_info
+
+- name: Gather subsets in all partitions
+  f5networks.f5_modules.bigip_device_info:
+    partition: "{{ item }}"
+    gather_subset:
+      - virtual-servers
+      - ltm-pools
+    provider: "{{ provider }}"
+  loop: "{{ device_info.partitions | json_query('[*].name') }}"
+  register: partition_info
+
+- name: Pre-upgrade parse
+  set_fact:
+    start_stats:
+      virtual_servers: "{{ partition_info.results | map(attribute='virtual_servers') | flatten
+        | items2dict(key_name='full_path', value_name='availability_status') }}"
+      ltm_pools: "{{ partition_info.results | map(attribute='ltm_pools') | flatten
+        | items2dict(key_name='full_path', value_name='availability_status') }}"
+
+- name: Set list of existing volumes
+  set_fact:
+    existing_volumes: >-
+      {{ device_info.software_volumes | map(attribute='name') | list }}
+
+- name: Set first available inactive volume
+  set_fact:
+    inactive_volume: >-
+      {{ (device_info.software_volumes
+            | selectattr('active', 'equalto', False)
+            | map(attribute='name')
+            | list)[0] | default(None) }}
+
+- name: Determine most common prefix for volume names
+  set_fact:
+    most_common_prefix: >-
+      {{ (existing_volumes
+            | map('regex_search', '^(HD|MD)')
+            | list
+            | unique)[0] if (existing_volumes | length > 0) }}
+  when: inactive_volume is none
+
+- name: Determine next available volume number
+  set_fact:
+    next_volume_number: >-
+      {{ (existing_volumes
+            | select('match', '^(HD|MD)1\\.\\d+$')
+            | map('regex_replace', '^(HD|MD)1\\.', '')
+            | map('int')
+            | max + 1) if (existing_volumes | length > 0) else 1 }}
+  when: inactive_volume is none
+
+- name: Set target volume
+  set_fact:
+    target_volume: >-
+      {{ inactive_volume if inactive_volume is not none
+        else most_common_prefix + '1.' + next_volume_number | string }}
+
+- name: Reactivate license
+  f5networks.f5_modules.bigip_device_license:
+    license_key: "{{ device_info.registration_key }}"
+    provider: "{{ provider }}"
+
+#- name: Wait for device to return to Active
+  #ansible.builtin.wait_for:
+    #path: /var/prompt/ps1
+    #search_regex: Active
+  #delegate_to: "{{ inventory_hostname }}"
+
+#- name: Pre-upgrade UCS
+  #ansible.builtin.include_tasks: create_ucs.yml
+
+#- name: Upload upgrade image to device
+  #ansible.posix.synchronize:
+    #src: "benk@10.255.32.210:/var/tmp/{{ upgrade_iso }}"
+    #dest: "/shared/images/"
+  #delegate_to: "{{ inventory_hostname }}"
+
+#- name: Wait for image to become available
+  #wait_for:
+    #timeout: 30
+
+- name: Install BIG-IP software
+  f5networks.f5_modules.bigip_software_install:
+    image: "{{ additional_arguments.image }}"
+    state: activated
+    volume: "{{ target_volume.stdout }}"
+    provider: "{{ provider }}"
+
+#- name: Wait for device to return to Active
+  #wait_for:
+    #path: /var/prompt/ps1
+    #search_regex: Active
+  #delegate_to: "{{ inventory_hostname }}"
+- name: Allow some time for services to start
+  ansible.builtin.pause:
+    seconds: 600
+
+- block:
+  - name: Gather post-upgrade config facts
     f5networks.f5_modules.bigip_device_info:
       partition: "{{ item }}"
       gather_subset:
         - virtual-servers
         - ltm-pools
-        - self-ips
-        - vlans
-        - software-volumes
-        - license
       provider: "{{ provider }}"
-    loop: "{{ partitions.stdout_lines }}"
-    register: device_info
+    loop: "{{ device_info.partitions | json_query('[*].name') }}"
+    register: partition_info
 
-  - name: Pre-upgrade parse
+  - name: Post-upgrade parse
     set_fact:
-      start_stats:
-        virtual_servers: "{{ device_info.results | map(attribute='virtual_servers') | flatten
+      end_stats:
+        virtual_servers: "{{ partition_info.results | map(attribute='virtual_servers') | flatten
           | items2dict(key_name='full_path', value_name='availability_status') }}"
-        ltm_pools: "{{ device_info.results | map(attribute='ltm_pools') | flatten
+        ltm_pools: "{{ partition_info.results | map(attribute='ltm_pools') | flatten
           | items2dict(key_name='full_path', value_name='availability_status') }}"
-        self_ips: "{{ device_info.results | map(attribute='self_ips') | flatten
-          | items2dict(key_name='full_path', value_name='vlan') }}"
-        vlans: "{{ device_info.results | map(attribute='vlans') | flatten
-          | items2dict(key_name='full_path', value_name='tag') }}"
 
-  - name: Set list of existing volumes
-    set_fact:
-      existing_volumes: >-
-        {{ device_info.software_volumes | map(attribute='name') | list }}
+  - name: Check Virtual Servers
+    assert:
+      that:
+        - item.value == end_stats.virtual_servers[item.key]
+      fail_msg: "Virtual server '{{ item.key }}' state changed from '{{ item.value }}' to '{{ end_stats.virtual_servers[item.key] }}'"
+      success_msg: "{{ item.key }} state unchanged"
+      quiet: yes
+    loop: "{{ start_stats.virtual_servers | dict2items }}"
+    loop_control:
+      label: "{{ item.key }}"
 
-  - name: Set first available inactive volume
-    set_fact:
-      inactive_volume: >-
-        {{ (device_info.software_volumes
-              | selectattr('active', 'equalto', False)
-              | map(attribute='name')
-              | list)[0] | default(None) }}
-
-  - name: Determine most common prefix for volume names
-    set_fact:
-      most_common_prefix: >-
-        {{ (existing_volumes
-              | map('regex_search', '^(HD|MD)')
-              | list
-              | unique)[0] if (existing_volumes | length > 0) }}
-    when: inactive_volume is none
-
-  - name: Determine next available volume number
-    set_fact:
-      next_volume_number: >-
-        {{ (existing_volumes
-              | select('match', '^(HD|MD)1\\.\\d+$')
-              | map('regex_replace', '^(HD|MD)1\\.', '')
-              | map('int')
-              | max + 1) if (existing_volumes | length > 0) else 1 }}
-    when: inactive_volume is none
-
-  - name: Set target volume
-    set_fact:
-      target_volume: >-
-        {{ inactive_volume if inactive_volume is not none
-          else most_common_prefix + '1.' + next_volume_number | string }}
-
-  - name: Reactivate license
-    f5networks.f5_modules.bigip_device_license:
-      license_key: "{{ device_info.registration_key }}"
-      provider: "{{ provider }}"
-
-  #- name: Wait for device to return to Active
-    #ansible.builtin.wait_for:
-      #path: /var/prompt/ps1
-      #search_regex: Active
-    #delegate_to: "{{ inventory_hostname }}"
-
-  #- name: Pre-upgrade UCS
-    #ansible.builtin.include_tasks: create_ucs.yml
-  
-  #- name: Upload upgrade image to device
-    #ansible.posix.synchronize:
-      #src: "benk@10.255.32.210:/var/tmp/{{ upgrade_iso }}"
-      #dest: "/shared/images/"
-    #delegate_to: "{{ inventory_hostname }}"
-  
-  #- name: Wait for image to become available
-    #wait_for:
-      #timeout: 30
-  
-  - name: Install BIG-IP software
-    f5networks.f5_modules.bigip_software_install:
-      image: "{{ additional_arguments.image }}"
-      state: activated
-      volume: "{{ target_volume.stdout }}"
-      provider: "{{ provider }}"
-
-  #- name: Wait for device to return to Active
-    #wait_for:
-      #path: /var/prompt/ps1
-      #search_regex: Active
-    #delegate_to: "{{ inventory_hostname }}"
-  - name: Allow some time for services to start
-    ansible.builtin.pause:
-      seconds: 600
-
-  - block:
-      - name: Gather post-upgrade config facts
-        f5networks.f5_modules.bigip_device_info:
-          partition: "{{ item }}"
-          gather_subset:
-            - virtual-servers
-            - ltm-pools
-            - self-ips
-            - vlans
-          provider: "{{ provider }}"
-        loop: "{{ partitions.stdout_lines }}"
-        register: device_info
-
-      - name: Post-upgrade parse
-        set_fact:
-          end_stats:
-            virtual_servers: "{{ device_info.results | map(attribute='virtual_servers') | flatten
-              | items2dict(key_name='full_path', value_name='availability_status') }}"
-            ltm_pools: "{{ device_info.results | map(attribute='ltm_pools') | flatten
-              | items2dict(key_name='full_path', value_name='availability_status') }}"
-            self_ips: "{{ device_info.results | map(attribute='self_ips') | flatten
-              | items2dict(key_name='full_path', value_name='vlan') }}"
-            vlans: "{{ device_info.results | map(attribute='vlans') | flatten
-              | items2dict(key_name='full_path', value_name='tag') }}"
-
-      - name: Check Virtual Servers
-        assert:
-          that:
-            - item.value == end_stats.virtual_servers[item.key]
-          fail_msg: "Virtual server '{{ item.key }}' state changed from '{{ item.value }}' to '{{ end_stats.virtual_servers[item.key] }}'"
-          success_msg: "{{ item.key }} state unchanged"
-          quiet: yes
-        loop: "{{ start_stats.virtual_servers | dict2items }}"
-        loop_control:
-          label: "{{ item.key }}"
-
-      - name: Check Pools
-        assert:
-          that:
-            - item.value == end_stats.ltm_pools[item.key]
-          fail_msg: "Pool '{{ item.key }}' state changed from '{{ item.value }}' to '{{ end_stats.ltm_pools[item.key] }}'"
-          success_msg: "{{ item.key }} state unchanged"
-          quiet: yes
-        loop: "{{ start_stats.ltm_pools | dict2items }}"
-        loop_control:
-          label: "{{ item.key }}"
-
-      - name: Check Self-IPs
-        assert:
-          that:
-            - item.value == end_stats.self_ips[item.key]
-          fail_msg: "Self IP '{{ item.key }}' state changed from '{{ item.value }}' to '{{ end_stats.self_ips[item.key] }}'"
-          success_msg: "{{ item.key }} state unchanged"
-          quiet: yes
-        loop: "{{ end_stats.self_ips | dict2items }}"
-        loop_control:
-          label: "{{ item.key }}"
-
-      - name: Check VLANs
-        assert:
-          that:
-            - item.value == end_stats.vlans[item.key]
-          fail_msg: "VLAN '{{ item.key }}' state changed from '{{ item.value }}' to '{{ end_stats.vlans[item.key] }}'"
-          success_msg: "{{ item.key }} state unchanged"
-          quiet: yes
-        loop: "{{ end_stats.vlans | dict2items }}"
-        loop_control:
-          label: "{{ item.key }}"
-      
-  #- name: Post-upgrade UCS
-    #ansible.builtin.include_tasks: create_ucs.yml
-          
-  when: "'Active' in failover_state.stdout"
+  - name: Check Pools
+    assert:
+      that:
+        - item.value == end_stats.ltm_pools[item.key]
+      fail_msg: "Pool '{{ item.key }}' state changed from '{{ item.value }}' to '{{ end_stats.ltm_pools[item.key] }}'"
+      success_msg: "{{ item.key }} state unchanged"
+      quiet: yes
+    loop: "{{ start_stats.ltm_pools | dict2items }}"
+    loop_control:
+      label: "{{ item.key }}"
+    
+#- name: Post-upgrade UCS
+  #ansible.builtin.include_tasks: create_ucs.yml
