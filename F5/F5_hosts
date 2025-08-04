@@ -1,6 +1,6 @@
 [bigip]
-bigipl7.example.com ansible_host=10.255.32.195
-bigipl4.example.com ansible_host=10.255.32.196
+bigip01.example.com ansible_host=10.255.32.195
+bigip02.example.com ansible_host=10.255.32.196
 
 [bigip:vars]
 ansible_ssh_common_args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"

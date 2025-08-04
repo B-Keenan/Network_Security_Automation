@@ -24,7 +24,7 @@
 - name: Append NTP configuration check to results
   set_fact:
     hardening_check_results: "{{ hardening_check_results + [{
-      'check_category': 'Time Synchronization',
+      'check_category': 'Network Services',
       'check_item': 'NTP uses internal trusted servers with optional authentication',
       'status': ntp_servers_status,
       'notes': ntp_notes

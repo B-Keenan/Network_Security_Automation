@@ -19,7 +19,7 @@
 - name: Append DNS configuration check to results
   set_fact:
     hardening_check_results: "{{ hardening_check_results + [{
-      'check_category': 'DNS',
+      'check_category': 'Network Services',
       'check_item': 'DNS uses internal servers',
       'status': dns_servers_status,
       'notes': dns_notes
