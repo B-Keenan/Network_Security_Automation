@@ -5,7 +5,7 @@
 # PC0002 alice
 #
 # Iterate over the list, creating a resource profile and/or User Role, respectively.
-# Custom variables: additional_arguments (refer to above sample data)
+# Custom variables: additional_arguments (AWX Survey textarea)
 ---
 - name: Create pc_user_list from input content
   ansible.builtin.set_fact:

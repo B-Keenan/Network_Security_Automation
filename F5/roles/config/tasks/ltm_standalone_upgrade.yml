@@ -1,11 +1,12 @@
 # Upgrade will be performed on a single host.
 # Not for DNS or vCMP configurations.
+# WIP
 #
-# AWX extra variables example usage:
-# upgrade_iso = "BIGIP-17.1.2.2-0.0.12.iso"
+# Custom variables: additional_arguments (AWX Survey textarea)
+# BIGIP-17.1.2.2-0.0.12.iso
 ---
 - name: Perform pre-upgrade shell tasks
-  ansible.builtin.include_tasks: pre_upgrade_shell.yml
+  ansible.builtin.import_tasks: pre_upgrade_shell.yml
 
 - name: Start F5 BIG-IP TMOS Software Upgrade
   block:
@@ -83,42 +84,40 @@
       license_key: "{{ device_info.registration_key }}"
       provider: "{{ provider }}"
 
-  - name: Wait for device to return to Active
-    ansible.builtin.wait_for:
-      path: /var/prompt/ps1
-      search_regex: Active
-    delegate_to: "{{ inventory_hostname }}"
+  #- name: Wait for device to return to Active
+    #ansible.builtin.wait_for:
+      #path: /var/prompt/ps1
+      #search_regex: Active
+    #delegate_to: "{{ inventory_hostname }}"
 
-  - name: Pre-upgrade UCS
-    ansible.builtin.include_tasks: create_ucs.yml
+  #- name: Pre-upgrade UCS
+    #ansible.builtin.include_tasks: create_ucs.yml
   
-  # Temporary
-  - name: Upload upgrade image to device
-    ansible.posix.synchronize:
-      src: "benk@10.255.32.210:/var/tmp/{{ upgrade_iso }}"
-      dest: "/shared/images/"
-    delegate_to: "{{ inventory_hostname }}"
+  #- name: Upload upgrade image to device
+    #ansible.posix.synchronize:
+      #src: "benk@10.255.32.210:/var/tmp/{{ upgrade_iso }}"
+      #dest: "/shared/images/"
+    #delegate_to: "{{ inventory_hostname }}"
   
-  - name: Wait for image to become available
-    wait_for:
-      timeout: 30
+  #- name: Wait for image to become available
+    #wait_for:
+      #timeout: 30
   
   - name: Install BIG-IP software
     f5networks.f5_modules.bigip_software_install:
-      image: "{{ upgrade_iso }}"
+      image: "{{ image }}"
       state: activated
       volume: "{{ target_volume.stdout }}"
       provider: "{{ provider }}"
 
-  - name: Wait for device to return to Active
-    wait_for:
-      path: /var/prompt/ps1
-      search_regex: Active
-    delegate_to: "{{ inventory_hostname }}"
-
+  #- name: Wait for device to return to Active
+    #wait_for:
+      #path: /var/prompt/ps1
+      #search_regex: Active
+    #delegate_to: "{{ inventory_hostname }}"
   - name: Allow some time for services to start
     ansible.builtin.pause:
-      seconds: 300
+      seconds: 600
 
   - block:
       - name: Gather post-upgrade config facts
@@ -189,7 +188,7 @@
         loop_control:
           label: "{{ item.key }}"
       
-  - name: Post-upgrade UCS
-    ansible.builtin.include_tasks: create_ucs.yml
+  #- name: Post-upgrade UCS
+    #ansible.builtin.include_tasks: create_ucs.yml
           
   when: "'Active' in failover_state.stdout"
