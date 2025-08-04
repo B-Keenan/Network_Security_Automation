@@ -3,7 +3,7 @@
 # WIP
 #
 # Custom variables: additional_arguments (AWX Survey textarea)
-# BIGIP-17.1.2.2-0.0.12.iso
+# image: BIGIP-17.1.2.2-0.0.12.iso
 ---
 - name: Perform pre-upgrade shell tasks
   ansible.builtin.import_tasks: pre_upgrade_shell.yml
@@ -105,7 +105,7 @@
   
   - name: Install BIG-IP software
     f5networks.f5_modules.bigip_software_install:
-      image: "{{ image }}"
+      image: "{{ additional_arguments.image }}"
       state: activated
       volume: "{{ target_volume.stdout }}"
       provider: "{{ provider }}"
