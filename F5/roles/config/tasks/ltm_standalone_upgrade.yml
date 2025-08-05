@@ -18,7 +18,7 @@
 - name: Create UCS on the BIG-IP
   f5networks.f5_modules.bigip_ucs_fetch:
     async_timeout: 600
-    src: "{{ inventory_hostname }}-{{ date.stdout }}.ucs"
+    src: "{{ inventory_hostname }}-{{ date.stdout[0] }}.ucs"
     only_create_file: true
     provider: "{{ provider }}"
 
