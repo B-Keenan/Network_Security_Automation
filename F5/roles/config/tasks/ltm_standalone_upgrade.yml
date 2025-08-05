@@ -72,8 +72,8 @@
   set_fact:
     next_volume_number: >-
       {{ (existing_volumes
-            | select('match', '^(HD|MD)1\\.[0-9]$')
-            | map('regex_replace', '^(HD|MD)1\\.', '')
+            | select('match', '^(HD|MD)1[.-][0-9]$')
+            | map('regex_replace', '^(HD|MD)1[.-]', '')
             | map('int')
             | list
             | default([0]) | max) + 1 }}
