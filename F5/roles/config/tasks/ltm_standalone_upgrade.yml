@@ -108,8 +108,8 @@
     state: activated
     volume: "{{ target_volume }}"
     provider: "{{ provider }}"
-  async: 1200
-  poll: 30
+  async: 1800
+  #poll: 30
 
 - name: Allow some time for services to start
   f5networks.f5_modules.bigip_wait:
