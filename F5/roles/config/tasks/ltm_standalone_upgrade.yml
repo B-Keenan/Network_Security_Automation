@@ -75,13 +75,14 @@
             | select('match', '^(HD|MD)1\\.\\d+$')
             | map('regex_replace', '^(HD|MD)1\\.', '')
             | map('int')
-            | max + 1) if (existing_volumes | length > 0) else 1 }}
+            | list
+            | default([])) | max | default(0) + 1 }}
   when: inactive_volume is none or inactive_volume == ""
 
 - name: Set target volume
   set_fact:
     target_volume: >-
-      {{ inactive_volume if inactive_volume is not none
+      {{ inactive_volume if inactive_volume is not none and inactive_volume != ""
         else most_common_prefix + '1.' + next_volume_number | string }}
 
 - name: Reactivate license
