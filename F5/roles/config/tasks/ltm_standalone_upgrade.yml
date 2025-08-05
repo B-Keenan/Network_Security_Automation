@@ -109,21 +109,20 @@
     volume: "{{ target_volume }}"
     provider: "{{ provider }}"
   async: 1800
-  #poll: 30
 
 - name: Allow some time for services to start
   f5networks.f5_modules.bigip_wait:
     timeout: 1800
-    sleep: 30
+    sleep: 120
     provider: "{{ provider }}"
 
 - name: Check failover status
   f5networks.f5_modules.bigip_command:
     commands: show sys failover
     interval: 30
-    wait_for: failover_status[0] contains active
+    wait_for: result[0] contains active
     provider: "{{ provider }}"
-  register: failover_status
+  register: result
 
 - block:
   - name: Gather post-upgrade config facts
