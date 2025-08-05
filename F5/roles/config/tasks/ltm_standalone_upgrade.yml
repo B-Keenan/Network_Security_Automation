@@ -2,15 +2,14 @@
 # Not for DNS or vCMP configurations.
 # WIP
 #
-# Custom variables: additional_arguments (AWX Survey textarea)
-# image: BIGIP-17.1.2.2-0.0.12.iso
+# Custom variables: additional_arguments (AWX Survey text)
+# BIGIP-17.1.2.2-0.0.12.iso
 ---
 #- name: Perform pre-upgrade shell tasks
   #ansible.builtin.include_tasks: pre_upgrade_shell.yml
 - name: Gather Date
   f5networks.f5_modules.bigip_command:
-    commands:
-      - run util bash -c 'date "+%F"'
+    commands: run util bash -c 'date "+%F"'
     provider: "{{ provider }}"
   register: date
 
@@ -67,7 +66,7 @@
             | map('regex_search', '^(HD|MD)')
             | list
             | unique)[0] if (existing_volumes | length > 0) }}
-  when: inactive_volume is none
+  when: inactive_volume is none or inactive_volume == ""
 
 - name: Determine next available volume number
   set_fact:
@@ -77,7 +76,7 @@
             | map('regex_replace', '^(HD|MD)1\\.', '')
             | map('int')
             | max + 1) if (existing_volumes | length > 0) else 1 }}
-  when: inactive_volume is none
+  when: inactive_volume is none or inactive_volume == ""
 
 - name: Set target volume
   set_fact:
@@ -111,7 +110,7 @@
 
 - name: Install BIG-IP software
   f5networks.f5_modules.bigip_software_install:
-    image: "{{ additional_arguments[0] }}"
+    image: "{{ additional_arguments }}"
     state: activated
     volume: "{{ target_volume.stdout }}"
     provider: "{{ provider }}"
@@ -123,7 +122,7 @@
   #delegate_to: "{{ inventory_hostname }}"
 - name: Allow some time for services to start
   ansible.builtin.pause:
-    seconds: 600
+    seconds: 300
 
 - block:
   - name: Gather post-upgrade config facts
