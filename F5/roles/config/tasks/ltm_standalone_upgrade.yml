@@ -57,7 +57,8 @@
       {{ (device_info.software_volumes
             | selectattr('active', 'equalto', False)
             | map(attribute='name')
-            | list)[0] | default(None) }}
+            | list
+            | first | default(None, true)) }}
 
 - name: Determine most common prefix for volume names
   set_fact:
@@ -86,7 +87,7 @@
 
 - name: Reactivate license
   f5networks.f5_modules.bigip_device_license:
-    license_key: "{{ device_info.registration_key }}"
+    license_key: "{{ device_info.license.registration_key }}"
     provider: "{{ provider }}"
 
 #- name: Wait for device to return to Active
