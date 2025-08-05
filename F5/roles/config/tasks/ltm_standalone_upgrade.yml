@@ -15,12 +15,12 @@
     save: yes
     provider: "{{ provider }}"
 
-- name: Create UCS on the BIG-IP
-  f5networks.f5_modules.bigip_ucs_fetch:
-    async_timeout: 600
-    src: "{{ inventory_hostname }}-{{ date.stdout[0] }}.ucs"
-    only_create_file: true
-    provider: "{{ provider }}"
+#- name: Create UCS on the BIG-IP
+  #f5networks.f5_modules.bigip_ucs_fetch:
+    #async_timeout: 600
+    #src: "{{ inventory_hostname }}-{{ date.stdout[0] }}.ucs"
+    #dest:
+    #provider: "{{ provider }}"
 
 - name: Gather subsets in Common
   f5networks.f5_modules.bigip_device_info:
@@ -113,7 +113,7 @@
 
 - name: Allow some time for services to start
   f5networks.f5_modules.bigip_wait:
-    timeout: 600
+    timeout: 1800
     sleep: 30
     provider: "{{ provider }}"
 
