@@ -114,7 +114,7 @@
   f5networks.f5_modules.bigip_software_install:
     image: "{{ additional_arguments }}"
     state: activated
-    volume: "{{ target_volume.stdout }}"
+    volume: "{{ target_volume }}"
     provider: "{{ provider }}"
 
 #- name: Wait for device to return to Active
