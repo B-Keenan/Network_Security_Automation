@@ -111,7 +111,7 @@
 
 - name: Install BIG-IP software
   f5networks.f5_modules.bigip_software_install:
-    image: "{{ additional_arguments.image }}"
+    image: "{{ additional_arguments[0] }}"
     state: activated
     volume: "{{ target_volume.stdout }}"
     provider: "{{ provider }}"
