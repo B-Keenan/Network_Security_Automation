@@ -72,8 +72,8 @@
   set_fact:
     next_volume_number: >-
       {{ (existing_volumes
-            | select('match', '^(HD|MD)1[.-][0-9]$')
-            | map('regex_replace', '^(HD|MD)1[.-]', '')
+            | select('match', '^(HD|MD)1[.][1-9]$')
+            | map('regex_replace', '^(HD|MD)1[.]', '')
             | map('int')
             | list
             | default([0]) | max) + 1 }}
@@ -87,7 +87,7 @@
 
 - name: Reactivate license
   f5networks.f5_modules.bigip_device_license:
-    #license_key: "{{ device_info.license.registration_key }}"
+    license_key: "{{ device_info.license.registration_key }}"
     state: "latest"
     provider: "{{ provider }}"
 
@@ -106,9 +106,9 @@
     #dest: "/shared/images/"
   #delegate_to: "{{ inventory_hostname }}"
 
-#- name: Wait for image to become available
-  #wait_for:
-    #timeout: 30
+- name: Allow some time for services to start
+  ansible.builtin.pause:
+    seconds: 60
 
 - name: Install BIG-IP software
   f5networks.f5_modules.bigip_software_install:
