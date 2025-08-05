@@ -1,12 +1,9 @@
-# Upgrade will be performed on a single host.
+# Upgrade will be performed on a standalone BIG-IP TMOS device.
 # Not for DNS or vCMP configurations.
-# WIP
 #
 # Custom variables: additional_arguments (AWX Survey text)
 # BIGIP-17.1.2.2-0.0.12.iso
 ---
-#- name: Perform pre-upgrade shell tasks
-  #ansible.builtin.include_tasks: pre_upgrade_shell.yml
 - name: Gather Date
   f5networks.f5_modules.bigip_command:
     commands: run util bash -c 'date "+%F"'
@@ -16,6 +13,13 @@
 - name: Save running configuration
   f5networks.f5_modules.bigip_config:
     save: yes
+    provider: "{{ provider }}"
+
+- name: Create UCS on the BIG-IP
+  f5networks.f5_modules.bigip_ucs_fetch:
+    async_timeout: 600
+    src: "{{ inventory_hostname }}-{{ date.stdout }}.ucs"
+    only_create_file: true
     provider: "{{ provider }}"
 
 - name: Gather subsets in Common
@@ -87,28 +91,16 @@
 
 - name: Reactivate license
   f5networks.f5_modules.bigip_device_license:
+    accept_eula: true
     license_key: "{{ device_info.license.registration_key }}"
     state: "latest"
     provider: "{{ provider }}"
 
-#- name: Wait for device to return to Active
-  #ansible.builtin.wait_for:
-    #path: /var/prompt/ps1
-    #search_regex: Active
-  #delegate_to: "{{ inventory_hostname }}"
-
-#- name: Pre-upgrade UCS
-  #ansible.builtin.include_tasks: create_ucs.yml
-
-#- name: Upload upgrade image to device
-  #ansible.posix.synchronize:
-    #src: "benk@10.255.32.210:/var/tmp/{{ upgrade_iso }}"
-    #dest: "/shared/images/"
-  #delegate_to: "{{ inventory_hostname }}"
-
 - name: Allow some time for services to start
-  ansible.builtin.pause:
-    seconds: 60
+  f5networks.f5_modules.bigip_wait:
+    timeout: 300
+    sleep: 15
+    provider: "{{ provider }}"
 
 - name: Install BIG-IP software
   f5networks.f5_modules.bigip_software_install:
@@ -116,15 +108,14 @@
     state: activated
     volume: "{{ target_volume }}"
     provider: "{{ provider }}"
+  async: 1200
+  poll: 30
 
-#- name: Wait for device to return to Active
-  #wait_for:
-    #path: /var/prompt/ps1
-    #search_regex: Active
-  #delegate_to: "{{ inventory_hostname }}"
 - name: Allow some time for services to start
-  ansible.builtin.pause:
-    seconds: 300
+  f5networks.f5_modules.bigip_wait:
+    timeout: 600
+    sleep: 30
+    provider: "{{ provider }}"
 
 - block:
   - name: Gather post-upgrade config facts
@@ -166,6 +157,3 @@
     loop: "{{ start_stats.ltm_pools | dict2items }}"
     loop_control:
       label: "{{ item.key }}"
-    
-#- name: Post-upgrade UCS
-  #ansible.builtin.include_tasks: create_ucs.yml
