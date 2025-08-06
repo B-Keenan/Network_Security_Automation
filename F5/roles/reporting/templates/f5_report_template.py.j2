@@ -9,7 +9,7 @@ wb.remove(wb.active)  # Remove default sheet
 summary = wb.create_sheet("Executive Summary")
 summary.append(["Category", "Total Checks", "Passed", "Failed", "N/A", "Overall Status"])
 summary.append(["Configuration Hardening", {{ hardening_total_checks }}, {{ hardening_passed_checks }}, {{ hardening_failed_checks }}, {{ hardening_na_checks }}, "{{ hardening_overall_status }}"])
-summary.append(["SSL/TLS Cipher & Profile Review", {{ ssl_total_checks }}, {{ ssl_passed_checks }}, {{ ssl_failed_checks }}, {{ ssl_na_checks }}, "{{ ssl_overall_status }}"])
+summary.append(["SSL Cipher & Profile Review", {{ ssl_total_checks }}, {{ ssl_passed_checks }}, {{ ssl_failed_checks }}, {{ ssl_na_checks }}, "{{ ssl_overall_status }}"])
 summary.append(["WAF Policy Management", {{ waf_total_checks }}, {{ waf_passed_checks }}, {{ waf_failed_checks }}, {{ waf_na_checks }}, "{{ waf_overall_status }}"])
 
 # Styling for Executive Summary
