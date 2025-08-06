@@ -10,25 +10,35 @@
     provider: "{{ provider }}"
   register: date
 
-- name: Modify rest timers if required
+- name: Get current sys db timeout values
   f5networks.f5_modules.bigip_command:
     commands: list sys db icrd.timeout restjavad.timeout restnoded.timeout
     provider: "{{ provider }}"
   register: timeout_check
 
-- name: Check and increase iControl process timeout values if less than 180
+- name: Parse timeout values
+  ansible.builtin.set_fact:
+    icrd_timeout: "{{ (timeout_check.stdout_lines | select('match', '.*icrd.timeout.*') | first | regex_search('value \"(\\d+)\"') | regex_replace('value \"(\\d+)\"', '\\1') | int) }}"
+    restjavad_timeout: "{{ (timeout_check.stdout_lines | select('match', '.*restjavad.timeout.*') | first | regex_search('value \"(\\d+)\"') | regex_replace('value \"(\\d+)\"', '\\1') | int) }}"
+    restnoded_timeout: "{{ (timeout_check.stdout_lines | select('match', '.*restnoded.timeout.*') | first | regex_search('value \"(\\d+)\"') | regex_replace('value \"(\\d+)\"', '\\1') | int) }}"
+
+- name: Set icrd.timeout to 180 if less than 180
   f5networks.f5_modules.bigip_command:
-    commands: |
-      if [ {{ timeout_check.result[0].icrd.timeout.value }} -lt 180 ]; then
-        modify sys db icrd.timeout value 180
-      fi
-      if [ {{ timeout_check.result[0].restjavad.timeout.value }} -lt 180 ]; then
-        modify sys db restjavad.timeout value 180
-      fi
-      if [ {{ timeout_check.result[0].restnoded.timeout.value }} -lt 180 ]; then
-        modify sys db restnoded.timeout value 180
-      fi
+    commands: modify sys db icrd.timeout value 180
     provider: "{{ provider }}"
+  when: icrd_timeout < 180
+
+- name: Set restjavad.timeout to 180 if less than 180
+  f5networks.f5_modules.bigip_command:
+    commands: modify sys db restjavad.timeout value 180
+    provider: "{{ provider }}"
+  when: restjavad_timeout < 180
+
+- name: Set restnoded.timeout to 180 if less than 180
+  f5networks.f5_modules.bigip_command:
+    commands: modify sys db restnoded.timeout value 180
+    provider: "{{ provider }}"
+  when: restnoded_timeout < 180
 
 - name: Save running configuration
   f5networks.f5_modules.bigip_config:
