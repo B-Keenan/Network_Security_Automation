@@ -22,13 +22,6 @@
     restjavad_timeout: "{{ (timeout_check.stdout_lines | select('match', '.*restjavad.timeout.*') | first | regex_search('value \"(\\d+)\"') | regex_replace('value \"(\\d+)\"', '\\1') | int) }}"
     restnoded_timeout: "{{ (timeout_check.stdout_lines | select('match', '.*restnoded.timeout.*') | first | regex_search('value \"(\\d+)\"') | regex_replace('value \"(\\d+)\"', '\\1') | int) }}"
 
-- name: Debug parsed timeout values
-  ansible.builtin.debug:
-    msg: |
-      icrd_timeout: {{ icrd_timeout }} (type: {{ icrd_timeout | type_debug }})
-      restjavad_timeout: {{ restjavad_timeout }} (type: {{ restjavad_timeout | type_debug }})
-      restnoded_timeout: {{ restnoded_timeout }} (type: {{ restnoded_timeout | type_debug }})
-
 - name: Set icrd.timeout to 180 if less than 180
   f5networks.f5_modules.bigip_command:
     commands: modify sys db icrd.timeout value 180
@@ -146,6 +139,7 @@
     volume: "{{ target_volume }}"
     provider: "{{ provider }}"
   async: 1800
+  poll: 120
 
 - name: Allow some time for services to start
   f5networks.f5_modules.bigip_wait:
