@@ -44,6 +44,9 @@
 - name: Include cert_validator_enabled task
   ansible.builtin.import_tasks: cert_validator_enabled.yml
 
+- name: Include unused_modules task
+  ansible.builtin.import_tasks: unused_modules.yml
+
 - name: List ASM provisioning status
   f5networks.f5_modules.bigip_command:
     commands:
@@ -53,7 +56,7 @@
 
 - name: Set ASM provisioned fact
   set_fact:
-    asm_provisioned: "{{ 'true' if asm_provision_result.stdout | regex_search('level\\s+nominal') else 'false' }}"
+    asm_provisioned: "{{ 'true' if asm_provision_result.stdout | regex_search('level') else 'false' }}"
     
 - name: Include asm_active_blocking task
   ansible.builtin.import_tasks: asm_active_blocking.yml

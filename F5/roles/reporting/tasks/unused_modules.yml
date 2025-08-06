@@ -1,0 +1,44 @@
+- name: Gather provisioned modules and Virtual Servers
+  f5networks.f5_modules.bigip_device_info:
+    gather_subset:
+      - provision-info
+      - virtual-servers
+    provider: "{{ provider }}"
+  register: device_info
+
+- name: Set AVR provisioned fact
+  set_fact:
+    avr_provisioned: "{{ 'true' if device_info.provision_info | selectattr('name', 'equalto', 'avr') | map(attribute='level') | first == 'nominal' else 'false' }}"
+
+- name: List HTTP analytics profiles
+  f5networks.f5_modules.bigip_command:
+    commands: list ltm profile analytics
+    provider: "{{ provider }}"
+  register: http_analytics_profiles
+  when: avr_provisioned | bool
+
+- name: List TCP analytics profiles
+  f5networks.f5_modules.bigip_command:
+    commands: list ltm profile tcp-analytics
+    provider: "{{ provider }}"
+  register: tcp_analytics_profiles
+  when: avr_provisioned | bool
+
+- name: Extract HTTP analytics profile names
+  set_fact:
+    http_analytics_profile_names: "{{ (http_analytics_profiles.stdout_lines | select('match', '^ltm profile analytics') | map('regex_replace', '^ltm profile analytics (\\S+).*', '\\1') | list) | default([]) }}"
+  when: avr_provisioned | bool
+
+- name: Extract TCP analytics profile names
+  set_fact:
+    tcp_analytics_profile_names: "{{ (tcp_analytics_profiles.stdout_lines | select('match', '^ltm profile tcp-analytics') | map('regex_replace', '^ltm profile tcp-analytics (\\S+).*', '\\1') | list) | default([]) }}"
+  when: avr_provisioned | bool
+
+- name: Check if analytics profiles are used in virtual servers
+  set_fact:
+    analytics_profiles_used: "{{ 'true' if device_info.virtual_servers | selectattr('profiles', 'defined') | select('json_query', '[?contains(profiles, `analytics`) || contains(profiles, `tcp-analytics`)]') | list | length > 0 else 'false' }}"
+  when: avr_provisioned | bool
+
+- name: Determine if AVR is unused
+  set_fact:
+    avr_unused: "{{ 'true' if avr_provisioned | bool and not analytics_profiles_used | bool and (http_analytics_profile_names | length > 0 or tcp_analytics_profile_names | length > 0) else 'false' }}"
