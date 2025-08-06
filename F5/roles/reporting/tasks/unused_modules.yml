@@ -35,12 +35,12 @@
 
 - name: Extract HTTP analytics profile names
   set_fact:
-    http_analytics_profile_names: "{{ (http_analytics_profiles.stdout_lines | select('match', '^ltm profile analytics') | map('regex_replace', '^ltm profile analytics\\s+([^\\s}]+).*', '\\1') | list) | default([]) }}"
+    http_analytics_profile_names: "{{ (http_analytics_profiles.stdout_lines | flatten | select('match', '^ltm profile analytics') | map('regex_replace', '^ltm profile analytics\\s+([^\\s}]+).*', '\\1') | list) | default([]) }}"
   when: avr_provisioned | bool
 
 - name: Extract TCP analytics profile names
   set_fact:
-    tcp_analytics_profile_names: "{{ (tcp_analytics_profiles.stdout_lines | select('match', '^ltm profile tcp-analytics') | map('regex_replace', '^ltm profile tcp-analytics\\s+([^\\s}]+).*', '\\1') | list) | default([]) }}"
+    tcp_analytics_profile_names: "{{ (tcp_analytics_profiles.stdout_lines | flatten | select('match', '^ltm profile tcp-analytics') | map('regex_replace', '^ltm profile tcp-analytics\\s+([^\\s}]+).*', '\\1') | list) | default([]) }}"
   when: avr_provisioned | bool
 
 - name: Check if analytics profiles are used in virtual servers
