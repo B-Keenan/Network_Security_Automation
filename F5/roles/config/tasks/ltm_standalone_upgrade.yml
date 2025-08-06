@@ -10,6 +10,26 @@
     provider: "{{ provider }}"
   register: date
 
+- name: Modify rest timers if required
+  f5networks.f5_modules.bigip_command:
+    commands: list sys db icrd.timeout restjavad.timeout restnoded.timeout
+    provider: "{{ provider }}"
+  register: timeout_check
+
+- name: Check and increase iControl process timeout values if less than 180
+  f5networks.f5_modules.bigip_command:
+    commands: |
+      if [ {{ timeout_check.result[0].icrd.timeout.value }} -lt 180 ]; then
+        modify sys db icrd.timeout value 180
+      fi
+      if [ {{ timeout_check.result[0].restjavad.timeout.value }} -lt 180 ]; then
+        modify sys db restjavad.timeout value 180
+      fi
+      if [ {{ timeout_check.result[0].restnoded.timeout.value }} -lt 180 ]; then
+        modify sys db restnoded.timeout value 180
+      fi
+    provider: "{{ provider }}"
+
 - name: Save running configuration
   f5networks.f5_modules.bigip_config:
     save: yes
@@ -123,6 +143,10 @@
     wait_for: result[0] contains active
     provider: "{{ provider }}"
   register: result
+
+- name: Allow some time for monitoring to complete
+  ansible.builtin.pause:
+    seconds: 300
 
 - block:
   - name: Gather post-upgrade config facts
