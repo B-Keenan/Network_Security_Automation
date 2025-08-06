@@ -1,10 +1,19 @@
-- name: Gather provisioned modules and Virtual Servers
+- name: Gather partitions and provision info
   f5networks.f5_modules.bigip_device_info:
     gather_subset:
+      - partitions
       - provision-info
-      - virtual-servers
     provider: "{{ provider }}"
   register: device_info
+
+- name: Gather virtual servers
+  f5networks.f5_modules.bigip_device_info:
+    partition: "{{ item }}"
+    gather_subset:
+      - virtual-servers
+    provider: "{{ provider }}"
+  loop: "{{ device_info.partitions | json_query('[*].name') }}"
+  register: vs_info
 
 - name: Set AVR provisioned fact
   set_fact:
@@ -12,14 +21,14 @@
 
 - name: List HTTP analytics profiles
   f5networks.f5_modules.bigip_command:
-    commands: list ltm profile analytics
+    commands: run util bash -c "tmsh -q -c 'cd /; list ltm profile analytics recursive'"
     provider: "{{ provider }}"
   register: http_analytics_profiles
   when: avr_provisioned | bool
 
 - name: List TCP analytics profiles
   f5networks.f5_modules.bigip_command:
-    commands: list ltm profile tcp-analytics
+    commands: run util bash -c "tmsh -q -c 'cd /; list ltm profile tcp-analytics'"
     provider: "{{ provider }}"
   register: tcp_analytics_profiles
   when: avr_provisioned | bool
@@ -36,7 +45,7 @@
 
 - name: Check if analytics profiles are used in virtual servers
   set_fact:
-    analytics_profiles_used: "{{ 'true' if device_info.virtual_servers | selectattr('profiles', 'defined') | select('json_query', '[?contains(profiles, `analytics`) || contains(profiles, `tcp-analytics`)]') | list | length > 0 else 'false' }}"
+    analytics_profiles_used: "{{ 'true' if vs_info.virtual_servers | selectattr('profiles', 'defined') | select('json_query', '[?contains(profiles, `analytics`) || contains(profiles, `tcp-analytics`)]') | list | length > 0 else 'false' }}"
   when: avr_provisioned | bool
 
 - name: Determine if AVR is unused
