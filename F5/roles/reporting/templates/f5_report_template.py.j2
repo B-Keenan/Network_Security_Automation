@@ -41,14 +41,14 @@ hardening_table = Table(displayName="HardeningTable", ref="A1:D{{ hardening_chec
 hardening_table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
 hardening.add_table(hardening_table)
 
-# SSL/TLS Cipher & Profile Review Sheet
-ssl_review = wb.create_sheet("SSL/TLS Cipher & Profile Review")
+# SSL Cipher & Profile Review Sheet
+ssl_review = wb.create_sheet("SSL Cipher & Profile Review")
 ssl_review.append(["Check Category", "Check Item", "Status (✔/✖/N/A)", "Notes"])
 {% for check in ssl_check_results %}
 ssl_review.append(["{{ check.check_category }}", "{{ check.check_item }}", "{{ check.status }}", "{{ check.notes }}"])
 {% endfor %}
 
-# Styling for SSL/TLS Cipher & Profile Review
+# Styling for SSL Cipher & Profile Review
 for cell in ssl_review[1]:
     cell.font = Font(bold=True)
     cell.fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")
