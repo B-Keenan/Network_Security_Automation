@@ -45,7 +45,7 @@
 
 - name: Check if analytics profiles are used in virtual servers
   set_fact:
-    analytics_profiles_used: "{{ 'true' if vs_info.ansible_facts.ansible_net_virtual_servers | selectattr('profiles', 'defined') | select('json_query', '[?contains(profiles, `analytics`) || contains(profiles, `tcp-analytics`)]') | list | length > 0 else 'false' }}"
+    analytics_profiles_used: "{{ 'true' if vs_info.results | flatten | selectattr('profiles', 'defined') | select('json_query', '[?contains(profiles, `analytics`) || contains(profiles, `tcp-analytics`)]') | list | length > 0 else 'false' }}"
   when: avr_provisioned | bool
 
 - name: Determine if AVR is unused
