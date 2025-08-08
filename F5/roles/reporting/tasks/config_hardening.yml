@@ -47,6 +47,9 @@
 - name: Include unused_modules task
   ansible.builtin.import_tasks: unused_modules.yml
 
+- name: Include no_deprecated_protocols task
+  ansible.builtin.import_tasks: no_deprecated_protocols.yml
+  
 - name: List ASM provisioning status
   f5networks.f5_modules.bigip_command:
     commands:
