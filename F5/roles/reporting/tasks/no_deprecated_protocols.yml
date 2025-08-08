@@ -8,7 +8,7 @@
 
 - name: Parse non-default profiles to ensure only tlsv1.2 and 1.3 are enabled
   set_fact:
-    ssl_profile_options: "{{ '✖' if ssl_options.stdout | regex_search('ltm profile client-ssl (?!(Common/clientssl|Common/clientssl-insecure-compatible|Common/clientssl-quic|Common/clientssl-secure|Common/crypto-server-default-clientssl|Common/splitsession-default-clientssl|Common/wom-default-clientssl|Common/apm-default-serverssl|Common/cloud-service-default-ssl|Common/crypto-client-default-serverssl|Common/do-not-remove-without-replacement|Common/f5aas-default-ssl|Common/pcoip-default-serverssl|Common/serverssl|Common/serverssl-insecure-compatible|Common/serverssl-secure|Common/shape-api-ssl|Common/splitsession-default-serverssl|Common/wom-default-serverssl))(\\S+/)?\\S+\\s*{((no-tlsv1).)*((no-tlsv1\\.1).)*((?!no-tlsv1\\.2).)*(?!no-tlsv1\\.3).*}') else '✔' }}"
+    ssl_profile_options: "{{ '✖' if ssl_options.stdout | regex_search('ltm profile (client-ssl|server-ssl) (?!(Common/clientssl|Common/clientssl-insecure-compatible|Common/clientssl-quic|Common/clientssl-secure|Common/crypto-server-default-clientssl|Common/splitsession-default-clientssl|Common/wom-default-clientssl|Common/apm-default-serverssl|Common/cloud-service-default-ssl|Common/crypto-client-default-serverssl|Common/do-not-remove-without-replacement|Common/f5aas-default-ssl|Common/pcoip-default-serverssl|Common/serverssl|Common/serverssl-insecure-compatible|Common/serverssl-secure|Common/shape-api-ssl|Common/splitsession-default-serverssl|Common/wom-default-serverssl))(\\S+/)?\\S+\\s*{((no-tlsv1).)*((no-tlsv1\\.1).)*((?!no-tlsv1\\.2).)*(?!no-tlsv1\\.3).*}') else '✔' }}"
 
 - name: Set ssl profile options check notes
   set_fact:

@@ -49,7 +49,10 @@
 
 - name: Include no_deprecated_protocols task
   ansible.builtin.import_tasks: no_deprecated_protocols.yml
-  
+
+- name: Include ssl_key_exchange task
+  ansible.builtin.import_tasks: ssl_key_exchange.yml
+
 - name: List ASM provisioning status
   f5networks.f5_modules.bigip_command:
     commands:
