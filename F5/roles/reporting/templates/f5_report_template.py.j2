@@ -19,7 +19,7 @@ for cell in summary[1]:
     cell.alignment = Alignment(horizontal="center", vertical="center")
     cell.border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
 
-summary_table = Table(displayName="SummaryTable", ref="A1:F3")
+summary_table = Table(displayName="SummaryTable", ref="A1:F4")
 summary_table.tableStyleInfo = TableStyleInfo(name="TableStyleMedium9", showRowStripes=True)
 summary.add_table(summary_table)
 
