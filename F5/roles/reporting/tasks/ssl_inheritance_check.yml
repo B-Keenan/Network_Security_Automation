@@ -1,0 +1,25 @@
+- name: Check SSL profile inheritance for insecure defaults
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile client-ssl recursive defaults-from'"
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile server-ssl recursive defaults-from'"
+    provider: "{{ provider }}"
+  register: inheritance_output
+
+- name: Parse SSL profile inheritance to ensure no insecure defaults
+  set_fact:
+    inheritance_status: "{{ '✖' if inheritance_output.stdout | regex_search('(clientssl-insecure-compatible|serverssl-insecure-compatible)') else '✔' }}"
+
+- name: Set SSL inheritance check notes
+  set_fact:
+    inheritance_notes: >-
+      {{ 'No insecure default profiles inherited' if inheritance_status == '✔' else 'Insecure default profiles detected in inheritance' }}
+
+- name: Append SSL inheritance check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'SSL Profiles',
+      'check_item': 'SSL Profile Inheritance Check',
+      'status': inheritance_status,
+      'notes': inheritance_notes
+      }] }}"

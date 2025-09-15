@@ -1,0 +1,25 @@
+- name: Check if static RSA key exchange is disabled (use ECDHE)
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile client-ssl recursive ciphers'"
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile server-ssl recursive ciphers'"
+    provider: "{{ provider }}"
+  register: cipher_output
+
+- name: Parse cipher output to ensure static RSA is disabled
+  set_fact:
+    static_rsa_status: "{{ '✖' if (cipher_output.stdout_lines | reject('in', default_profiles) | regex_search('(?i)(?<!\\!)\\b!RSA\\b')) else '✔' }}"
+
+- name: Set static RSA check notes
+  set_fact:
+    static_rsa_notes: >-
+      {{ 'Static RSA key exchange is disabled, using ECDHE' if static_rsa_status == '✔' else 'Static RSA key exchange detected' }}
+
+- name: Append static RSA check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'SSL Profiles',
+      'check_item': 'Static RSA key exchange disabled (use ECDHE)',
+      'status': static_rsa_status,
+      'notes': static_rsa_notes
+      }] }}"

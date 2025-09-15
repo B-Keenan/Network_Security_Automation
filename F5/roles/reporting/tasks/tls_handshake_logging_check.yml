@@ -1,0 +1,24 @@
+- name: Check if TLS handshake errors and cert validation failures are logged
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - list sys db log.ssl.level
+    provider: "{{ provider }}"
+  register: tls_logging_output
+
+- name: Parse TLS logging configuration
+  set_fact:
+    tls_logging_status: "{{ '✖' if tls_logging_output.stdout | regex_search('value\\s+\"(Error|Warning)\"') else '✔' }}"
+
+- name: Set TLS logging check notes
+  set_fact:
+    tls_logging_notes: >-
+      {{ 'TLS handshake errors and cert validation failures logged' if tls_logging_status == '✔' else 'TLS handshake error logging not properly configured' }}
+
+- name: Append TLS logging check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'Logging',
+      'check_item': 'Log TLS handshake errors and cert validation failures',
+      'status': tls_logging_status,
+      'notes': tls_logging_notes
+      }] }}"

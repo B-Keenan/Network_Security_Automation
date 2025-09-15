@@ -1,0 +1,24 @@
+- name: Check if SSL/TLS negotiation logs are enabled for anomaly detection
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list sys db tmm.ssl.log.level'"
+    provider: "{{ provider }}"
+  register: negotiation_logs_output
+
+- name: Parse SSL/TLS negotiation logs configuration
+  set_fact:
+    negotiation_logs_status: "{{ '✖' if negotiation_logs_output.stdout | regex_search('value\\s+\"(Error|Warning|Notice)\"') else '✔' }}"
+
+- name: Set SSL/TLS negotiation logs check notes
+  set_fact:
+    negotiation_logs_notes: >-
+      {{ 'SSL/TLS negotiation logs enabled for anomaly detection' if negotiation_logs_status == '✔' else 'SSL/TLS negotiation logs not enabled' }}
+
+- name: Append SSL/TLS negotiation logs check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'Logging',
+      'check_item': 'SSL/TLS negotiation logs enabled for anomaly detection',
+      'status': negotiation_logs_status,
+      'notes': negotiation_logs_notes
+      }] }}"

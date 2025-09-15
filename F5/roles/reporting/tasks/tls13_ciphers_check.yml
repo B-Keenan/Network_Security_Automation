@@ -1,0 +1,50 @@
+- name: Check if TLS 1.3 cipher suites are explicitly defined
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile client-ssl recursive ciphers options'"
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile server-ssl recursive ciphers options'"
+    provider: "{{ provider }}"
+  register: tls13_ciphers_output
+
+- name: Parse cipher output to ensure TLS 1.3 ciphers are explicitly defined
+  set_fact:
+    tls13_ciphers_status: >-
+      {%- set has_missing = false -%}
+      {%- for sublist in tls13_ciphers_output.stdout_lines -%}
+        {%- set current_profile = '' -%}
+        {%- set ciphers_line = '' -%}
+        {%- set options_line = '' -%}
+        {%- for line in sublist -%}
+          {%- if line is match('^ltm profile (client|server)-ssl (.) {$') -%}
+            {%- set current_profile = line | regex_replace('^ltm profile (client|server)-ssl (.) {$', '\2') -%}
+          {%- elif line is match('^\sciphers (.)$') -%}
+            {%- set ciphers_line = line | regex_replace('^\sciphers (.)$', '\1') -%}
+          {%- elif line is match('^\soptions (.)$') -%}
+            {%- set options_line = line -%}
+          {%- elif line == '}' and current_profile not in default_profiles -%}
+            {%- set is_using_cipher_group = (ciphers_line == 'none') -%}
+            {%- set tls13_enabled = ('no-tlsv1.3' not in options_line) -%}
+            {%- set has_explicit_tls13 = (ciphers_line | regex_search('(TLS13_AES128_GCM_SHA256|TLS13_AES256_GCM_SHA384|TLS13_CHACHA20_POLY1305_SHA256|TLSV1_3)')) -%}
+            {%- if (is_using_cipher_group and tls13_enabled) or (not is_using_cipher_group and has_explicit_tls13) -%}
+              {# OK, do nothing #}
+            {%- else -%}
+              {%- set has_missing = true -%}
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- endfor -%}
+      {{ '✖' if has_missing else '✔' }}
+
+- name: Set TLS 1.3 ciphers check notes
+  set_fact:
+    tls13_ciphers_notes: >-
+      {{ 'TLS 1.3 cipher suites explicitly defined' if tls13_ciphers_status == '✔' else 'TLS 1.3 cipher suites not explicitly defined' }}
+
+- name: Append TLS 1.3 ciphers check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'SSL Profiles',
+      'check_item': 'TLS 1.3 Cipher Suites Explicitly Defined',
+      'status': tls13_ciphers_status,
+      'notes': tls13_ciphers_notes
+      }] }}"

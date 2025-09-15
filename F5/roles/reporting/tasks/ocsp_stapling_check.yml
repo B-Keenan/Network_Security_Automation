@@ -1,0 +1,24 @@
+- name: Check if OCSP stapling is enabled
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile client-ssl recursive ocsp-stapling'"
+    provider: "{{ provider }}"
+  register: ocsp_output
+
+- name: Parse OCSP stapling configuration
+  set_fact:
+    ocsp_status: "{{ '✖' if ocsp_output.stdout | regex_search('ocsp-stapling disabled') else '✔' }}"
+
+- name: Set OCSP stapling check notes
+  set_fact:
+    ocsp_notes: >-
+      {{ 'OCSP stapling is enabled' if ocsp_status == '✔' else 'OCSP stapling is disabled' }}
+
+- name: Append OCSP stapling check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'SSL Profiles',
+      'check_item': 'OCSP Stapling Enabled',
+      'status': ocsp_status,
+      'notes': ocsp_notes
+      }] }}"

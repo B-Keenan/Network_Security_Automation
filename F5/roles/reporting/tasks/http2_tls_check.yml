@@ -1,0 +1,24 @@
+- name: Check if HTTP/2 over TLS is securely configured
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile http recursive http2'"
+    provider: "{{ provider }}"
+  register: http2_output
+
+- name: Parse HTTP/2 configuration
+  set_fact:
+    http2_status: "{{ '✖' if http2_output.stdout | regex_search('http2\\s+{.*enabled\\s+false') else '✔' }}"
+
+- name: Set HTTP/2 check notes
+  set_fact:
+    http2_notes: >-
+      {{ 'HTTP/2 over TLS securely configured' if http2_status == '✔' else 'HTTP/2 over TLS not securely configured' }}
+
+- name: Append HTTP/2 check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'HTTP Security',
+      'check_item': 'HTTP/2 over TLS securely configured',
+      'status': http2_status,
+      'notes': http2_notes
+      }] }}"

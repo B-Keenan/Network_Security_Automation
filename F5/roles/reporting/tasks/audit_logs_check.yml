@@ -1,0 +1,24 @@
+- name: Check if audit logs track SSL profile and certificate changes
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list sys db audit.enabled'"
+    provider: "{{ provider }}"
+  register: audit_logs_output
+
+- name: Parse audit logs configuration
+  set_fact:
+    audit_logs_status: "{{ '✖' if audit_logs_output.stdout | regex_search('value\\s+\"false\"') else '✔' }}"
+
+- name: Set audit logs check notes
+  set_fact:
+    audit_logs_notes: >-
+      {{ 'Audit logs track SSL profile and certificate changes' if audit_logs_status == '✔' else 'Audit logs not tracking SSL profile/certificate changes' }}
+
+- name: Append audit logs check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'Logging',
+      'check_item': 'Audit logs track SSL profile and certificate changes',
+      'status': audit_logs_status,
+      'notes': audit_logs_notes
+      }] }}"

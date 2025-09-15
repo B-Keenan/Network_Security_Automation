@@ -5,6 +5,29 @@
     ssl_check_results: []
     waf_check_results: []
 
+- name: Set default profiles to exclude from SSL checks
+  set_fact:
+    default_profiles:
+      - Common/clientssl
+      - Common/clientssl-insecure-compatible
+      - Common/clientssl-quic
+      - Common/clientssl-secure
+      - Common/crypto-server-default-clientssl
+      - Common/splitsession-default-clientssl
+      - Common/wom-default-clientssl
+      - Common/apm-default-serverssl
+      - Common/cloud-service-default-ssl
+      - Common/crypto-client-default-serverssl
+      - Common/do-not-remove-without-replacement
+      - Common/f5aas-default-ssl
+      - Common/pcoip-default-serverssl
+      - Common/serverssl
+      - Common/serverssl-insecure-compatible
+      - Common/serverssl-secure
+      - Common/shape-api-ssl
+      - Common/splitsession-default-serverssl
+      - Common/wom-default-serverssl
+
 - name: Include mgmt_acl task
   ansible.builtin.import_tasks: mgmt_acl.yml
 
@@ -50,8 +73,17 @@
 - name: Include no_deprecated_protocols task
   ansible.builtin.import_tasks: no_deprecated_protocols.yml
 
-- name: Include ssl_key_exchange task
-  ansible.builtin.import_tasks: ssl_key_exchange.yml
+- name: Include static_rsa_check task
+  ansible.builtin.import_tasks: static_rsa_check.yml
+
+- name: Include pfs_check task
+  ansible.builtin.import_tasks: pfs_check.yml
+
+- name: Include tls13_ciphers_check task
+  ansible.builtin.import_tasks: tls13_ciphers_check.yml
+
+- name: Include cipher_group_check task
+  ansible.builtin.import_tasks: cipher_group_check.yml
 
 - name: List ASM provisioning status
   f5networks.f5_modules.bigip_command:
@@ -66,10 +98,6 @@
     
 - name: Include asm_active_blocking task
   ansible.builtin.import_tasks: asm_active_blocking.yml
-  when: asm_provisioned | bool
-
-- name: Include asm_liveupdate task
-  ansible.builtin.import_tasks: asm_liveupdate.yml
   when: asm_provisioned | bool
 
 - name: Calculate Hardening summary metrics

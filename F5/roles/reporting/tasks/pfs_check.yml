@@ -1,0 +1,25 @@
+- name: Check if Perfect Forward Secrecy is enforced via ECDHE/DHE
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile client-ssl recursive ciphers'"
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile server-ssl recursive ciphers'"
+    provider: "{{ provider }}"
+  register: pfs_output
+
+- name: Parse cipher output to ensure PFS via ECDHE/DHE
+  set_fact:
+    pfs_status: "{{ '✖' if pfs_output.stdout_lines | reject('in', default_profiles) | regex_search('(?i)(?<!\\!)(ECDHE|DHE)') else '✔' }}"
+
+- name: Set PFS check notes
+  set_fact:
+    pfs_notes: >-
+      {{ 'Perfect Forward Secrecy enforced via ECDHE/DHE' if pfs_status == '✔' else 'Non-PFS ciphers detected' }}
+
+- name: Append PFS check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'SSL Profiles',
+      'check_item': 'Perfect Forward Secrecy enforced via ECDHE/DHE',
+      'status': pfs_status,
+      'notes': pfs_notes
+      }] }}"

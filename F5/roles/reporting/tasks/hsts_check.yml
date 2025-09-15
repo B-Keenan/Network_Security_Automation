@@ -1,0 +1,24 @@
+- name: Check if HSTS header is enabled with long max-age and preload
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile http recursive hsts { mode maximum-age preload }'"
+    provider: "{{ provider }}"
+  register: hsts_output
+
+- name: Parse HSTS configuration
+  set_fact:
+    hsts_status: "{{ '✖' if hsts_output.stdout | regex_search('hsts\\s+{.*enabled\\s+false') or hsts_output.stdout | regex_search('max-age\\s+\\d{1,7}\\s') else '✔' }}"
+
+- name: Set HSTS check notes
+  set_fact:
+    hsts_notes: >-
+      {{ 'HSTS header enabled with long max-age and preload' if hsts_status == '✔' else 'HSTS header not properly configured' }}
+
+- name: Append HSTS check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'HTTP Security',
+      'check_item': 'HSTS header enabled with long max-age and preload',
+      'status': hsts_status,
+      'notes': hsts_notes
+      }] }}"

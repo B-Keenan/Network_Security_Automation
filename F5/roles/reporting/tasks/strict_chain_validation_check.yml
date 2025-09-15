@@ -1,0 +1,24 @@
+- name: Check if strict certificate chain validation is enforced
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile client-ssl recursive cert-key-chain'"
+    provider: "{{ provider }}"
+  register: chain_validation_output
+
+- name: Parse certificate chain validation configuration
+  set_fact:
+    chain_validation_status: "{{ '✖' if chain_validation_output.stdout | regex_search('verify-peer disabled') else '✔' }}"
+
+- name: Set strict chain validation check notes
+  set_fact:
+    chain_validation_notes: >-
+      {{ 'Strict certificate chain validation enforced' if chain_validation_status == '✔' else 'Strict certificate chain validation not enforced' }}
+
+- name: Append strict chain validation check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'Certificates',
+      'check_item': 'Strict certificate chain validation enforced',
+      'status': chain_validation_status,
+      'notes': chain_validation_notes
+      }] }}"

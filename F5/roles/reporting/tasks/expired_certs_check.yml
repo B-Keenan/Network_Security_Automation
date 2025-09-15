@@ -1,0 +1,24 @@
+- name: Check for expired or soon-to-expire certificates
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list sys crypto cert recursive'"
+    provider: "{{ provider }}"
+  register: cert_expiry_output
+
+- name: Parse certificate expiration dates
+  set_fact:
+    cert_expiry_status: "{{ '✖' if cert_expiry_output.stdout | regex_search('expiration\\s+\\d{4}-\\d{2}-\\d{2}') | ansible.builtin.to_datetime | ansible.builtin.strftime('%s') < ansible_date_time.epoch else '✔' }}"
+
+- name: Set certificate expiration check notes
+  set_fact:
+    cert_expiry_notes: >-
+      {{ 'No expired or soon-to-expire certificates' if cert_expiry_status == '✔' else 'Expired or soon-to-expire certificates detected' }}
+
+- name: Append certificate expiration check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'Certificates',
+      'check_item': 'No expired or soon-to-expire certificates',
+      'status': cert_expiry_status,
+      'notes': cert_expiry_notes
+      }] }}"

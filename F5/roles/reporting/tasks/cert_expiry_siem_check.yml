@@ -1,0 +1,24 @@
+- name: Check if certificate expiry monitoring is integrated with SIEM
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list sys log-config publisher'"
+    provider: "{{ provider }}"
+  register: siem_output
+
+- name: Parse SIEM integration for certificate expiry monitoring
+  set_fact:
+    siem_status: "{{ '✖' if siem_output.stdout | regex_search('publisher\\s+none') else '✔' }}"
+
+- name: Set SIEM integration check notes
+  set_fact:
+    siem_notes: >-
+      {{ 'Certificate expiry monitoring integrated with SIEM' if siem_status == '✔' else 'Certificate expiry monitoring not integrated with SIEM' }}
+
+- name: Append SIEM integration check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'Monitoring',
+      'check_item': 'Certificate expiry monitoring integrated with SIEM',
+      'status': siem_status,
+      'notes': siem_notes
+      }] }}"

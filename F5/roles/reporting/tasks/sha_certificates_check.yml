@@ -1,0 +1,24 @@
+- name: Check if only SHA-2/SHA-3 certificates are in use
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list sys crypto cert recursive'"
+    provider: "{{ provider }}"
+  register: cert_output
+
+- name: Parse certificate signature algorithms
+  set_fact:
+    sha_cert_status: "{{ '✖' if cert_output.stdout | regex_search('(SHA1|MD5)') else '✔' }}"
+
+- name: Set SHA-2/SHA-3 certificates check notes
+  set_fact:
+    sha_cert_notes: >-
+      {{ 'Only SHA-2/SHA-3 certificates in use' if sha_cert_status == '✔' else 'Non-SHA-2/SHA-3 certificates detected' }}
+
+- name: Append SHA-2/SHA-3 certificates check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'Certificates',
+      'check_item': 'Only SHA-2/SHA-3 certificates in use',
+      'status': sha_cert_status,
+      'notes': sha_cert_notes
+      }] }}"

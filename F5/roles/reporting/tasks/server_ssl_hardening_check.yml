@@ -1,0 +1,25 @@
+- name: Check if server-SSL profiles are hardened
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile server-ssl recursive ciphers'"
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile server-ssl recursive options'"
+    provider: "{{ provider }}"
+  register: server_ssl_output
+
+- name: Parse server-SSL profiles for weak ciphers or protocols
+  set_fact:
+    server_ssl_status: "{{ '✖' if server_ssl_output.stdout | regex_search('(DES|RC4|MD5|no-tlsv1|no-tlsv1\\.1)') else '✔' }}"
+
+- name: Set server-SSL hardening check notes
+  set_fact:
+    server_ssl_notes: >-
+      {{ 'Server-SSL profiles are hardened' if server_ssl_status == '✔' else 'Weak ciphers or protocols detected in server-SSL profiles' }}
+
+- name: Append server-SSL hardening check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'SSL Profiles',
+      'check_item': 'Server-SSL Profiles Hardened',
+      'status': server_ssl_status,
+      'notes': server_ssl_notes
+      }] }}"

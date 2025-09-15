@@ -1,0 +1,25 @@
+- name: Check if SSL renegotiation is disabled or strict
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile client-ssl recursive renegotiation'"
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile server-ssl recursive renegotiation'"
+    provider: "{{ provider }}"
+  register: renegotiation_output
+
+- name: Parse renegotiation configuration
+  set_fact:
+    renegotiation_status: "{{ '✖' if renegotiation_output.stdout | regex_search('renegotiation enabled') else '✔' }}"
+
+- name: Set renegotiation check notes
+  set_fact:
+    renegotiation_notes: >-
+      {{ 'Renegotiation is disabled or strict' if renegotiation_status == '✔' else 'Insecure SSL renegotiation enabled' }}
+
+- name: Append renegotiation check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'SSL Profiles',
+      'check_item': 'Renegotiation Disabled or Strict',
+      'status': renegotiation_status,
+      'notes': renegotiation_notes
+      }] }}"

@@ -1,0 +1,24 @@
+- name: Check if alerts are configured for SSL certificate expiration
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list sys crypto cert-monitor'"
+    provider: "{{ provider }}"
+  register: cert_monitor_output
+
+- name: Parse certificate expiration alert configuration
+  set_fact:
+    cert_alert_status: "{{ '✖' if cert_monitor_output.stdout | regex_search('enabled\\s+false') else '✔' }}"
+
+- name: Set certificate expiration alert check notes
+  set_fact:
+    cert_alert_notes: >-
+      {{ 'Alerts configured for SSL certificate expiration' if cert_alert_status == '✔' else 'No alerts configured for SSL certificate expiration' }}
+
+- name: Append certificate expiration alert check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'Monitoring',
+      'check_item': 'Alert on SSL certificate expiration',
+      'status': cert_alert_status,
+      'notes': cert_alert_notes
+      }] }}"

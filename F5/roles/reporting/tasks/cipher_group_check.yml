@@ -1,0 +1,33 @@
+- name: Check if cipher group is used instead of cipher strings
+  f5networks.f5_modules.bigip_command:
+    commands:
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile client-ssl recursive cipher-group'"
+      - run util bash -c "tmsh -q -c 'cd /; list ltm profile server-ssl recursive cipher-group'"
+    provider: "{{ provider }}"
+  register: cipher_group_output
+
+- name: Normalize stdout_lines for parsing
+  set_fact:
+    normalized_stdout: "{{ (cipher_group_output.stdout_lines[0] + cipher_group_output.stdout_lines[1]) | join('\n') }}"
+
+- name: Create default profiles regex pattern
+  set_fact:
+    default_profiles_regex: "{{ default_profiles | map('regex_escape') | join('|') }}"
+
+- name: Parse cipher group usage
+  set_fact:
+    cipher_group_status: "{{ '✖' if normalized_stdout | regex_search('ltm profile (client|server)-ssl (?!(%s)).*?\\s+{\\s+cipher-group\\s+none\\s*}' | format(default_profiles_regex)) else '✔' }}"
+
+- name: Set cipher group check notes
+  set_fact:
+    cipher_group_notes: >-
+      {{ 'Cipher group used instead of strings' if cipher_group_status == '✔' else 'Cipher strings used instead of cipher group' }}
+
+- name: Append cipher group check to results
+  set_fact:
+    ssl_check_results: "{{ ssl_check_results + [{
+      'check_category': 'SSL Profiles',
+      'check_item': 'Cipher Group Usage Instead of Strings',
+      'status': cipher_group_status,
+      'notes': cipher_group_notes
+      }] }}"
