@@ -17,3 +17,5 @@ dependencies:
 additional_build_steps:
   prepend_final:
     - RUN python3 -m pip install --upgrade pip
+    # Install Docker CLI + curl
+    - RUN apt-get update && apt-get install -y docker-cli curl && rm -rf /var/lib/apt/lists/*

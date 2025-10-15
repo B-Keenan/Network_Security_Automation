@@ -1,0 +1,48 @@
+- name: Ensure directories exist for templates and results
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - "{{ template_dir }}"
+    - "{{ workspace_dir }}/results"
+
+- name: Determine available container runtime
+  shell: |
+    if command -v podman >/dev/null 2>&1; then
+      echo podman
+    elif command -v docker >/dev/null 2>&1; then
+      echo docker
+    else
+      echo none
+    fi
+  register: container_runtime
+  changed_when: false
+
+- name: Fail if no container runtime is available
+  fail:
+    msg: "Neither Docker nor Podman is available in this Execution Environment."
+  when: container_runtime.stdout == "none"
+
+- name: Update Nuclei templates
+  command: >
+    {{ container_runtime.stdout }} run --rm
+    -v {{ template_dir }}:/root/nuclei-templates
+    projectdiscovery/nuclei:latest -update-templates
+  args:
+    chdir: "{{ workspace_dir }}"
+
+- name: Run Nuclei scan
+  command: >
+    {{ container_runtime.stdout }} run --rm
+    -v {{ template_dir }}:/root/nuclei-templates
+    -v {{ target_file }}:/root/targets.txt
+    -v {{ workspace_dir }}/results:/root/results
+    projectdiscovery/nuclei:latest
+    -l /root/targets.txt
+    -o /root/results/{{ result_file | basename }}
+  args:
+    chdir: "{{ workspace_dir }}"
+
+- name: Display results summary
+  shell: "grep -c '^' {{ result_file }} || true"
+  register: finding_count
